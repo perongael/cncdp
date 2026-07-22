@@ -49,6 +49,10 @@
                         <i class="fa-solid fa-file-lines" aria-hidden="true"></i>
                         Pages
                     </a>
+                    <a href="{{ path('admin_avis_list') }}" class="sidebar-link {% if 'admin_avis' in app.current_route or 'admin_criteres' in app.current_route %}active{% endif %}">
+                        <i class="fa-solid fa-scale-balanced" aria-hidden="true"></i>
+                        Avis consultatifs
+                    </a>
                     <a href="{{ path('admin_organizations') }}" class="sidebar-link {% if 'admin_organizations' in app.current_route %}active{% endif %}">
                         <i class="fa-solid fa-building" aria-hidden="true"></i>
                         Organisations

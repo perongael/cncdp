@@ -1,0 +1,119 @@
+{% extends 'admin/base_admin.html.twig' %}
+
+{% block title %}Avis — Administration CNCDP{% endblock %}
+
+{% block admin_body %}
+    <div class="admin-page-header">
+        <p class="breadcrumb">
+            <a href="{{ path('admin_dashboard') }}">Administration</a> &rsaquo; Avis
+        </p>
+        <h1>Gérer les avis consultatifs</h1>
+    </div>
+
+    <div class="admin-content">
+        {% for message in app.flashes('success') %}
+            <div class="admin-alert admin-alert-success" role="alert">
+                <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                {{ message }}
+            </div>
+        {% endfor %}
+        {% for message in app.flashes('error') %}
+            <div class="admin-alert admin-alert-danger" role="alert">
+                <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+                {{ message }}
+            </div>
+        {% endfor %}
+
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h2><i class="fa-solid fa-scale-balanced" aria-hidden="true"></i> Tous les avis</h2>
+                <div class="admin-d-flex" style="gap:0.5rem;">
+                    <a href="{{ path('admin_criteres_list') }}" class="btn-admin btn-admin-outline btn-admin-sm">
+                        <i class="fa-solid fa-tags" aria-hidden="true"></i> Gérer les critères
+                    </a>
+                    <a href="{{ path('admin_avis_new') }}" class="btn-admin btn-admin-primary btn-admin-sm">
+                        <i class="fa-solid fa-plus" aria-hidden="true"></i> Nouvel avis
+                    </a>
+                </div>
+            </div>
+            <div class="admin-card-body" style="overflow-x:auto;">
+                {% if avis_list is empty %}
+                    <p class="admin-text-muted" style="text-align:center;padding:2rem 0;">
+                        <i class="fa-solid fa-scale-balanced" aria-hidden="true" style="font-size:2rem;display:block;margin-bottom:0.5rem;"></i>
+                        Aucun avis pour le moment.<br>
+                        <a href="{{ path('admin_avis_new') }}">Créer le premier avis</a>
+                    </p>
+                {% else %}
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Numéro</th>
+                            <th>Titre</th>
+                            <th>Date</th>
+                            <th>PDF</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for avis in avis_list %}
+                        <tr>
+                            <td><code>{{ avis.numero }}</code></td>
+                            <td>
+                                <strong>{{ avis.titre }}</strong>
+                                {% if avis.criteres|length > 0 %}
+                                    <br><small class="admin-text-muted">
+                                        {% for cv in avis.criteres|slice(0, 3) %}
+                                            <span class="admin-badge admin-badge-info" style="font-size:0.65rem;">{{ cv.valeur }}</span>
+                                        {% endfor %}
+                                        {% if avis.criteres|length > 3 %}
+                                            <span class="admin-text-muted">+{{ avis.criteres|length - 3 }}</span>
+                                        {% endif %}
+                                    </small>
+                                {% endif %}
+                            </td>
+                            <td>{{ avis.dateAvis|date('d/m/Y') }}</td>
+                            <td>
+                                {% if avis.pdfFilename %}
+                                    <span class="admin-badge admin-badge-success" style="font-size:0.7rem;">
+                                        <i class="fa-solid fa-file-pdf" aria-hidden="true"></i> PDF
+                                    </span>
+                                {% else %}
+                                    <span class="admin-text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if avis.isPublished %}
+                                    <span class="admin-badge admin-badge-success">Publié</span>
+                                {% else %}
+                                    <span class="admin-badge admin-badge-warning">Brouillon</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="admin-d-flex" style="gap:0.25rem;flex-wrap:wrap;">
+                                    <a href="{{ path('admin_avis_edit', {id: avis.id}) }}" class="btn-admin btn-admin-outline btn-admin-sm">
+                                        <i class="fa-solid fa-pen" aria-hidden="true"></i> Éditer
+                                    </a>
+                                    <form method="post" action="{{ path('admin_avis_toggle', {id: avis.id}) }}" style="display:inline;">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('toggle_avis_' ~ avis.id) }}">
+                                        <button type="submit" class="btn-admin btn-admin-sm {% if avis.isPublished %}btn-admin-warning{% else %}btn-admin-success{% endif %}" title="{{ avis.isPublished ? 'Dépublier' : 'Publier' }}">
+                                            <i class="fa-solid {% if avis.isPublished %}fa-eye-slash{% else %}fa-eye{% endif %}" aria-hidden="true"></i>
+                                        </button>
+                                    </form>
+                                    <form method="post" action="{{ path('admin_avis_delete', {id: avis.id}) }}" onsubmit="return confirm('Supprimer cet avis ? Cette action est irréversible.');" style="display:inline;">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete_avis_' ~ avis.id) }}">
+                                        <button type="submit" class="btn-admin btn-admin-danger btn-admin-sm">
+                                            <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

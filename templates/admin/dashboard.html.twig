@@ -18,7 +18,7 @@
                     <i class="fa-solid fa-file-lines" aria-hidden="true"></i>
                 </div>
                 <div class="stat-info">
-                    <h3>5</h3>
+                    <h3>{{ pages_count|default(0) }}</h3>
                     <p>Pages du site</p>
                 </div>
             </div>
@@ -36,7 +36,7 @@
                     <i class="fa-solid fa-scale-balanced" aria-hidden="true"></i>
                 </div>
                 <div class="stat-info">
-                    <h3>0</h3>
+                    <h3>{{ avis_count|default(0) }}</h3>
                     <p>Avis publiés</p>
                 </div>
             </div>

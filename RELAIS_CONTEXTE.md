@@ -4,13 +4,95 @@
 
 ## En-tête
 
-Date : 21/07/2026
-Session : Création page « Journées d'études » (formation)
-Tag : [PAGE] [FORMATION] [GRAPESJS] [FRONT]
+Date : 22/07/2026
+Session : Système de gestion des avis consultatifs
+Tag : [AVIS] [FILTRES] [PDF] [CRUD] [ADMIN]
 
 ---
 
 ## Historique
+
+### Session [AVIS] [FILTRES] [PDF] [CRUD] [ADMIN] — 22/07/2026
+
+**Objectif :** Créer un système complet de gestion des avis consultatifs du CNCDP avec filtres dynamiques, import PDF et interface publique de consultation.
+
+**Résumé :**
+- **3 nouvelles entités Doctrine** créées :
+  - `Avis` : numéro, titre, slug, résumé, contenu HTML, date, année, PDF, statut (draft/published)
+  - `Critere` : catégories de filtres dynamiques (nom, slug, actif, ordre) — les admins peuvent créer/modifier/supprimer des critères sans toucher au code
+  - `CritereValeur` : valeurs pour chaque critère, liées en ManyToMany avec `Avis`
+- **5 critères par défaut** insérés dans la migration : Thématique, Type de demandeur, Contexte, Article du Code, Mot-clé — avec des valeurs prédéfinies pour chaque
+- **Migration** `Version20260722000003` : crée les tables `avis`, `critere`, `critere_valeur`, `avis_critere` (MySQL/InnoDB)
+- **Back-office admin :**
+  - `AvisCrudController` (`/admin/avis`) : liste, création, modification, suppression, toggle publication, upload PDF, suppression PDF
+  - `CritereController` (`/admin/criteres`) : gestion complète des critères et valeurs (ajout, modification, suppression, activation/désactivation)
+  - Interface d'édition d'avis avec sélection des critères via checkboxes groupés par catégorie
+  - Upload PDF : fichier stocké dans `public/uploads/avis/`, nommé `{slug}-{date}.pdf`
+- **Partie publique :**
+  - `AvisController` : liste avec recherche plein texte + filtres par année + filtres par critères combinables
+  - Fiche détaillée : numéro, titre, date, résumé, contenu complet, catégories groupées, téléchargement PDF, avis similaires
+  - Routes : `/avis` (liste, priority 10) et `/avis/{slug}` (fiche, priority 10) — pas de conflit avec la route `/{slug}` générique
+- **Templates :**
+  - `admin/avis_list.html.twig` : tableau avec numéro, titre, tags, date, PDF, statut, actions (éditer, publier/dépublier, supprimer)
+  - `admin/avis_edit.html.twig` : formulaire 2 colonnes (contenu + métadonnées/critères/PDF)
+  - `admin/criteres.html.twig` : gestion des critères avec formulaires d'édition inline
+  - `avis/index.html.twig` : Hero + barre de recherche + filtres dropdown + cartes d'avis
+  - `avis/show.html.twig` : fiche détaillée avec sidebar métadonnées + avis similaires
+- **Modifications existant :**
+  - Sidebar admin : ajout lien « Avis consultatifs »
+  - Dashboard : compteurs dynamiques (pages publiées, avis publiés)
+  - `config/menu.json` : URL corrigée `/avis` (était `demande-avis-consultatifs` sans `/`)
+  - `config/footer.json` : lien « Index des avis » pointe vers `/avis`
+
+**⚠️ Règles apprises :**
+- `getParameter()` n'est pas disponible dans le constructeur des contrôleurs (AbstractController injecte le container après construction) → utiliser une méthode privée lazy
+- Les critères sont entièrement dynamiques : ajouter une thématique dans l'admin la rend immédiatement disponible dans les filtres publics ET dans le formulaire d'édition des avis
+- Le système de filtres repose sur `CritereValeur` en ManyToMany avec `Avis` : les filtres publics utilisent des `<select>` qui envoient des IDs de valeurs de critères
+- Les avis similaires sont déterminés par le nombre de critères en commun (requête DQL avec GROUP BY + COUNT)
+
+### Session [DEPLOY] [PAGES] [STYLE] [GRAPESJS] [FIX] — 22/07/2026
+
+**Objectif :** Déployer le site sur Infomaniak, reconstruire les 6 pages manquantes avec le contenu officiel, corriger le Style Manager (dégradés, couleurs, text-shadow).
+
+**Résumé :**
+- **Déploiement Infomaniak réussi** sur https://gperontest.online
+  - Git initialisé, dépôt GitHub `perongael/cncdp`
+  - Clé SSH ed25519, workflow GitHub Actions `deploy.yml` (push main → rsync → composer → importmap:install → asset-map:compile → cache:clear)
+  - `.env.local` production avec MySQL (⚠️ MDP changé pour éviter les `$`)
+  - `.htaccess` dans `public/` commité dans Git (était exclu et supprimé par rsync)
+  - Document Root → `public/`, migrations exécutées
+- **6 pages reconstruites** avec contenu des `.docx` de `Pages_site/` :
+  - Le CNCDP : Bureau (3 pers.), CA (17 orgs avec titulaires/suppléants), documents fondateurs
+  - Adhésion : 7 valeurs, conditions, cotisation 250 €, 3 étapes, contact le.cncdp@gmail.com
+  - Avis consultatifs : procédure 4 étapes, tarifs (gratuit/50 €/150 €), paiement
+  - Journées d'études, Formations, Contact : contenu enrichi
+- **Hero uniformisé** sur les 7 pages : dégradé 3 tons (#2d2540→#9d38da→#9335e4) + halos radiaux rose/orange + text-shadow
+- **Style Manager** :
+  - `text-shadow` ajouté dans secteur Effets (5 niveaux)
+  - Dégradés utilisent `var(--grad-start)` et `var(--grad-end)` → changement des couleurs met à jour le fond
+  - `syncBgToStyleManager()` : détecte le type de dégradé, recalcul le background-image quand les variables changent, convertit les couleurs en dur vers CSS variables
+  - Nouveau bloc ✨ Hero avec halo dans 🧩 Compositions
+- **Fix éditeur** : extraction du `<body>` avant `setComponents()` (évite `<html>`, `<head>`, `<meta>` parasites)
+- **Fix accents** : `cleanHtml()` décode `\uXXXX` → UTF-8 + script de correction des données existantes
+- **Fix `importmap.php`** : retiré des exclusions rsync + ajout `importmap:install` dans deploy.yml
+
+**⚠️ Problèmes rencontrés :**
+- **MDP MySQL avec `$`** → conflits d'échappement DotEnv/Shell/URL → changé pour MDP sans caractères spéciaux
+- **`importmap.php` exclu du déploiement** → entrypoint `app` introuvable → ajouté au git + `importmap:install` dans CI
+- **`var/log` inexistant** → créé avec permissions
+- **`DEFAULT_URI` absent du .env.local** → ajouté
+- **`.htaccess` supprimé par `rsync --delete`** → commité dans Git
+- **Pages absentes en production** → seulement Accueil migré, les 6 autres recréées
+- **`grapesjsData` désynchronisé** → l'éditeur chargeait l'ancien état → mis à NULL pour parser le HTML
+- **HTML wrapper (`<html>`, `<head>`, `<meta>`) dans l'éditeur** → sélection parasite → extraction body uniquement
+
+**⚠️ Règles apprises :**
+- Toujours commiter `.htaccess` dans Git (sinon rsync --delete le supprime)
+- `importmap.php` ne doit PAS être exclu du déploiement
+- Toujours exécuter `importmap:install` avant `asset-map:compile` en production
+- Les `$` dans les MDP MySQL sont un cauchemar d'échappement (DotEnv → Shell → URL) → utiliser des MDP sans `$`
+- Pour que les dégradés soient éditables dans le Style Manager, utiliser `var(--grad-start)` et `var(--grad-end)` + recalcul dans `syncBgToStyleManager()`
+- Injecter le HTML sans wrapper DOCTYPE/html/head/body pour éviter les composants parasites dans l'éditeur
 
 ### Session [PAGE] [FORMATION] [GRAPESJS] [FRONT] — 21/07/2026 (soir)
 
@@ -283,7 +365,11 @@ Intégration GrapesJS + CRUD Pages (voir détails plus bas)
 ## Section Inventaire
 
 ### [NEW]
-- **Page BDD** `page` (ID 14) — « Journées d'études », slug `journees-detudes`, `published`, HTML 23 966 car., GrapesJS data 41 000 car.
+- `.github/workflows/deploy.yml` — Workflow CI/CD Infomaniak (push main → rsync → composer → importmap → assets → cache)
+- `public/.htaccess` — Réécriture URL Apache pour Symfony (commitée dans Git)
+- `Pages_site/` — 4 fichiers .docx (Accueil, Le CNCDP, Adhésion, Avis consultatifs) contenant le contenu officiel
+- Page BDD `page` (ID 2-7) — 6 pages recréées avec contenu officiel (Le CNCDP, Adhésion, Avis consultatifs, Journées d'études, Formations, Contact)
+- `assets/page-editor.js` — **[STYLE-MANAGER]** `text-shadow` dans secteur Effets ; **[BLOC]** ✨ Hero avec halo dans 🧩 Compositions ; **[FIX]** extraction body avant setComponents ; **[FIX]** syncBgToStyleManager recalcule background-image depuis CSS variables ; **[FIX]** dégradés utilisent var(--grad-start)/var(--grad-end) avec recalcul automatique
 - `Docs_technique/13-creation-pages.md` — **Guide complet pour agents IA** : comment créer une page compatible GrapesJS, bugs connus, checklist
 - `Docs_technique/12-menu.md` — Documentation du système de menu dynamique administrable
 - `Docs_technique/11-bas-de-page.md` — Documentation du système de footer dynamique administrable
@@ -331,7 +417,10 @@ Intégration GrapesJS + CRUD Pages (voir détails plus bas)
 - `assets/page-editor.js` — **[GRAPESJS-BLOCKS]** 6 nouveaux blocs Bootstrap (Carousel, Accordéon, Jumbotron, Liste groupée, Alerte, Onglets) ; composant custom `carousel-img` avec traits src/alt ; Bootstrap JS ajouté au canvas
 
 ### [MODIF]
-- `assets/page-editor.js` — **[STYLE-MANAGER]** Ajout propriété `border-top-color` (« Couleur bordure sup. ») dans le secteur Bordure & Arrondi
+- `src/Controller/Admin/PageCrudController.php` — **[FIX]** `cleanHtml()` décode les échappements Unicode `\uXXXX` → UTF-8
+- `assets/page-editor.js` — **[STYLE-MANAGER]** Ajout `text-shadow` (5 niveaux : légère/moyenne/forte/claire) ; **[FIX]** Dégradés avec `var(--grad-start)`/`var(--grad-end)` + recalcul automatique ; **[FIX]** syncBgToStyleManager détecte et convertit les couleurs ; **[BLOC]** ✨ Hero avec halo ; **[FIX]** Extraction body avant setComponents
+- `config/menu.json` — **[MODIF]** URL « Journées d'études » : `#` → `/journees-detudes`
+- `.env.local` — **[MODIF]** Configuration PostgreSQL locale restaurée
 - `assets/page-editor.js` — **[BLOC]** Nouveau bloc `comp-card-accent` (« 🃏 Carte accent ») : icône + titre + description + bouton, bordure supérieure colorée personnalisable
 - `assets/page-editor.js` — **[FIX]** Tous les blocs rebuild utilisent `addStyle()` au lieu de `setStyle()` pour éviter l'écrasement de propriétés
 - `src/Controller/Admin/PageCrudController.php` — **[FIX]** Remplacement du sanitizer Symfony par `cleanHtml()` (préserve formulaires)
@@ -357,31 +446,28 @@ Intégration GrapesJS + CRUD Pages (voir détails plus bas)
 ## Section État
 
 ### ✅ Terminé
-- **Page « Journées d'études »** : 5 sections (Hero, Programme, Intervenants, Comité, Documents), design system CNCDP respecté, contenu fidèle, rééditable dans GrapesJS
-- **Refonte UI éditeur GrapesJS** : interface inspirée du Studio SDK (topbar icônes, barre d'état, thème sombre aligné sidebar, grille blocs 2 colonnes)
-- **9 nouveaux blocs "📐 Mise en page"** : Section, Séparateur, 2 Col. 50/50, 2 Col. 25/75, 2 Col. 75/25, 3 Colonnes, 4 Colonnes, Lien Carte, Image + Texte
-- **Traduction française** de tous les blocs natifs des plugins (1 Column → 1 colonne, Text → Texte, etc.)
-- **Correction collapse catégories** : le CSS ne bloque plus la fermeture des catégories de blocs
-- **Uniformisation couleur** : tous les blocs utilisent le terracotta #d4845a
-- **Migration GrapesJS 0.21.10 → 0.23.2** : CDN mis à jour, aucune régression, Symbols désormais disponibles
-- **Outil Grille** : abandonné après 2 implémentations (Bootstrap puis CSS Grid). Retiré du code, documenté dans `Docs_technique/09-grille.md`
-- **Bug pluginsOpts** : accolade en double corrigée (causait le non-chargement de `page-editor.js`)
-- 5 plugins GrapesJS intégrés et testés
-- Entité Page + CRUD + route dynamique fonctionnels
-- Documentation technique complète (9 docs)
+- **Déploiement Infomaniak** : site en ligne sur https://gperontest.online, CI/CD GitHub Actions, MySQL, SSH
+- **7 pages en ligne** avec contenu officiel (Accueil, Le CNCDP, Adhésion, Avis consultatifs, Journées d'études, Formations, Contact)
+- **Système Avis** : entités Avis/Critere/CritereValeur, CRUD admin complet, import PDF avec taguage, filtres dynamiques (admin gérables sans code), partie publique (recherche, filtres, fiches, téléchargement PDF)
+- **Hero uniformisé** sur toutes les pages (dégradé 3 tons + halos + text-shadow)
+- **Style Manager enrichi** : text-shadow, dégradés éditables via CSS variables, détection auto du type de fond
+- **Nouveau bloc** ✨ Hero avec halo
+- **Fix éditeur** : extraction body, .htaccess commité, importmap.php dans CI
+- **Fix accents** : cleanHtml() décode Unicode + données existantes corrigées
+- **Dashboard dynamique** : compteurs pages publiées et avis publiés calculés depuis la BDD
+- **Menu et Footer** : liens « Avis consultatifs » et « Index des avis » corrigés
 
 ### 🚧 En cours
-- **Déploiement Infomaniak** : plan établi, prêt à exécuter. En attente des identifiants Infomaniak (serveur SSH, utilisateur, nom du dossier site).
+- **Entité Organization** : page admin Organisations encore statique (3 entrées en dur). À finaliser.
 
 ### ⚠️ Attention
-- **Dette technique — styles en doublon CSS + JS** : les styles des blocs sont appliqués à la fois en CSS et en JavaScript (`applyBlockStyles()` via `setInterval` 500ms) car GrapesJS écrase les styles CSS par des styles inline. Le JS est nécessaire pour garantir l'uniformité visuelle.
-- **Migration non exécutée** — `pdo_pgsql` absent du PHP CLI. À exécuter via Docker : `docker compose exec -T php php bin/console doctrine:migrations:migrate`
-- Pas de tests unitaires/fonctionnels
-- Le carrousel dans l'éditeur nécessite un rafraîchissement dur (Ctrl+F5) après mise à jour du JS
-- Les IDs des composants Bootstrap (carouselDemo, accordionDemo, tabsDemo) peuvent entrer en conflit si plusieurs instances sur la même page
+- **Dette technique — styles en doublon CSS + JS** : les styles des blocs sont appliqués à la fois en CSS et en JavaScript (`applyBlockStyles()` via `setInterval` 500ms) car GrapesJS écrase les styles CSS par des styles inline.
+- **Pas de tests** unitaires/fonctionnels
 - **Interactions JS dans le canvas inopérantes** — GrapesJS intercepte les clics pour la sélection. Le carrousel/accordéon ne fonctionnent pas dans l'éditeur
-- **Risque XSS** — Le HTML est stocké brut en BDD et injecté via `|raw`. Pas de sanitization côté serveur
-- **Plugin `grapesjs-indexeddb` installé** — le stockage local navigateur est fonctionnel. La persistance passe par `editor.store()` appelé dans `sync()` + sauvegarde formulaire.
+- **`identity_generation_preferences` PostgreSQL** dans `doctrine.yaml` — sans impact sur MySQL, à nettoyer à terme
+- **MDP MySQL sans caractères spéciaux** obligatoire (les `$` causent des conflits d'échappement en cascade : DotEnv → Shell → URL)
+- **`fix_unicode_final.php`** commité par erreur dans Git — à nettoyer
+- CSP warning : `data:application/javascript` bloqué (Stimulus/Turbo)
 
 ### [À VÉRIFIER]
 - Test du carrousel avec de vraies images (les placeholders placehold.co fonctionnent-ils ?)
@@ -455,13 +541,11 @@ Raison : Le plugin Toolbox (0 avis, 2023) n'est pas fiable et fait trop de chose
 
 ## 📍 Next Step
 
-Créer l'entité `Organization` avec migration Doctrine et finaliser la page admin Organisations (CRUD : ajout, modification, suppression, upload logo).
-
-> ⚠️ **En attente** : déploiement Infomaniak (GitHub Actions + SSH). Guide prêt dans `Docs_technique/14-GUIDE_DEPLOIEMENT_GITHUB_INFOMANIAK.md`. Identifiants Infomaniak nécessaires. À rappeler à chaque début de session.
+Finaliser le système Avis : tester l'import de PDF avec taguage, peupler la base avec des avis réels, et éventuellement ajouter un import batch (dossier de PDF → création automatique avec métadonnées extraites des noms de fichiers).
 
 ---
 
-> Dernière mise à jour : 21/07/2026 — Session [PAGE] [FORMATION] [GRAPESJS] [FRONT]
+> Dernière mise à jour : 22/07/2026 — Session [DEPLOY] [PAGES] [STYLE] [GRAPESJS] [FIX]
 
 ### Session [GRAPESJS-UX-COMPLETION] — 19/07/2026
 

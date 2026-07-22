@@ -1,0 +1,207 @@
+{% extends 'admin/base_admin.html.twig' %}
+
+{% block title %}Critères de filtre — Administration CNCDP{% endblock %}
+
+{% block admin_body %}
+    <div class="admin-page-header">
+        <p class="breadcrumb">
+            <a href="{{ path('admin_dashboard') }}">Administration</a> &rsaquo;
+            <a href="{{ path('admin_avis_list') }}">Avis</a> &rsaquo;
+            Critères de filtre
+        </p>
+        <h1>Gérer les critères de filtre</h1>
+        <p class="admin-text-muted">Ces critères apparaissent dynamiquement dans les filtres publics et dans le formulaire d'édition des avis.</p>
+    </div>
+
+    <div class="admin-content">
+        {% for message in app.flashes('success') %}
+            <div class="admin-alert admin-alert-success" role="alert">
+                <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                {{ message }}
+            </div>
+        {% endfor %}
+        {% for message in app.flashes('error') %}
+            <div class="admin-alert admin-alert-danger" role="alert">
+                <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+                {{ message }}
+            </div>
+        {% endfor %}
+
+        {# Formulaire d'ajout rapide de critère #}
+        <div class="admin-card admin-mb-3">
+            <div class="admin-card-header">
+                <h2><i class="fa-solid fa-plus-circle" aria-hidden="true"></i> Nouveau critère</h2>
+            </div>
+            <div class="admin-card-body">
+                <form method="post" action="{{ path('admin_critere_new') }}" class="admin-d-flex" style="gap:1rem;align-items:flex-end;flex-wrap:wrap;">
+                    <input type="hidden" name="_token" value="{{ csrf_token('critere_new') }}">
+                    <div class="admin-form-group" style="flex:1;min-width:200px;">
+                        <label for="new_nom">Nom du critère</label>
+                        <input type="text" id="new_nom" name="nom" class="admin-input" placeholder="Ex: Région, Population concernée..." required>
+                    </div>
+                    <div class="admin-form-group" style="width:100px;">
+                        <label for="new_ordre">Ordre</label>
+                        <input type="number" id="new_ordre" name="ordre" class="admin-input" value="0" min="0">
+                    </div>
+                    <div class="admin-form-group">
+                        <button type="submit" class="btn-admin btn-admin-primary">
+                            <i class="fa-solid fa-plus" aria-hidden="true"></i> Créer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {# Liste des critères et leurs valeurs #}
+        {% if criteres is empty %}
+            <div class="admin-card">
+                <div class="admin-card-body">
+                    <p class="admin-text-muted" style="text-align:center;padding:1rem;">
+                        Aucun critère défini. Utilisez le formulaire ci-dessus pour créer votre premier critère.
+                    </p>
+                </div>
+            </div>
+        {% else %}
+            {% for critere in criteres %}
+            <div class="admin-card admin-mb-3">
+                <div class="admin-card-header" style="background:{% if critere.actif %}#f8f9fa{% else %}#f1f1f1{% endif %};">
+                    <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
+                        <span style="font-weight:700;font-size:1.1rem;">{{ critere.nom }}</span>
+                        {% if not critere.actif %}
+                            <span class="admin-badge admin-badge-warning" style="font-size:0.7rem;">Inactif</span>
+                        {% endif %}
+                        <code style="font-size:0.75rem;">{{ critere.slug }}</code>
+                        <span class="admin-text-muted" style="font-size:0.8rem;">{{ critere.valeurs|length }} valeur(s)</span>
+                    </div>
+                    <div class="admin-d-flex" style="gap:0.25rem;">
+                        {# Modifier le critère #}
+                        <button type="button" class="btn-admin btn-admin-outline btn-admin-sm" onclick="document.getElementById('edit-critere-{{ critere.id }}').style.display='block';" title="Modifier">
+                            <i class="fa-solid fa-pen" aria-hidden="true"></i>
+                        </button>
+                        {# Supprimer le critère #}
+                        <form method="post" action="{{ path('admin_critere_delete', {id: critere.id}) }}" onsubmit="return confirm('Supprimer le critère « {{ critere.nom }} » et toutes ses valeurs ?');" style="display:inline;">
+                            <input type="hidden" name="_token" value="{{ csrf_token('critere_delete_' ~ critere.id) }}">
+                            <button type="submit" class="btn-admin btn-admin-danger btn-admin-sm" title="Supprimer">
+                                <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                {# Formulaire d'édition du critère (masqué par défaut) #}
+                <div id="edit-critere-{{ critere.id }}" style="display:none;padding:1rem;border-bottom:1px solid #dee2e6;background:#fffdf5;">
+                    <form method="post" action="{{ path('admin_critere_edit', {id: critere.id}) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('critere_edit_' ~ critere.id) }}">
+                        <div style="display:flex;gap:1rem;align-items:flex-end;flex-wrap:wrap;">
+                            <div class="admin-form-group" style="flex:1;min-width:150px;">
+                                <label>Nom</label>
+                                <input type="text" name="nom" class="admin-input" value="{{ critere.nom }}" required>
+                            </div>
+                            <div class="admin-form-group" style="width:80px;">
+                                <label>Ordre</label>
+                                <input type="number" name="ordre" class="admin-input" value="{{ critere.ordre }}" min="0">
+                            </div>
+                            <div class="admin-form-group">
+                                <label style="display:flex;align-items:center;gap:0.25rem;cursor:pointer;">
+                                    <input type="checkbox" name="actif" value="1" {{ critere.actif ? 'checked' : '' }}>
+                                    Actif
+                                </label>
+                            </div>
+                            <div class="admin-form-group">
+                                <button type="submit" class="btn-admin btn-admin-primary btn-admin-sm">
+                                    <i class="fa-solid fa-check" aria-hidden="true"></i> Enregistrer
+                                </button>
+                                <button type="button" class="btn-admin btn-admin-outline btn-admin-sm" onclick="document.getElementById('edit-critere-{{ critere.id }}').style.display='none';">
+                                    Annuler
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                {# Liste des valeurs #}
+                <div class="admin-card-body">
+                    {% if critere.valeurs is empty %}
+                        <p class="admin-text-muted">Aucune valeur définie pour ce critère.</p>
+                    {% else %}
+                        <table class="admin-table" style="margin:0;">
+                            <thead>
+                                <tr>
+                                    <th style="width:50%;">Valeur</th>
+                                    <th>Ordre</th>
+                                    <th>Statut</th>
+                                    <th style="width:120px;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for valeur in critere.valeurs %}
+                                <tr style="{% if not valeur.actif %}opacity:0.5;{% endif %}">
+                                    <td>{{ valeur.valeur }}</td>
+                                    <td>{{ valeur.ordre }}</td>
+                                    <td>
+                                        {% if valeur.actif %}
+                                            <span class="admin-badge admin-badge-success" style="font-size:0.65rem;">Actif</span>
+                                        {% else %}
+                                            <span class="admin-badge admin-badge-warning" style="font-size:0.65rem;">Inactif</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="admin-d-flex" style="gap:0.25rem;">
+                                            <button type="button" class="btn-admin btn-admin-outline btn-admin-sm" onclick="document.getElementById('edit-valeur-{{ valeur.id }}').style.display='table-row';" title="Modifier">
+                                                <i class="fa-solid fa-pen" aria-hidden="true"></i>
+                                            </button>
+                                            <form method="post" action="{{ path('admin_critere_valeur_delete', {id: valeur.id}) }}" onsubmit="return confirm('Supprimer « {{ valeur.valeur }} » ?');" style="display:inline;">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('valeur_delete_' ~ valeur.id) }}">
+                                                <button type="submit" class="btn-admin btn-admin-danger btn-admin-sm" title="Supprimer">
+                                                    <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {# Ligne d'édition (masquée) #}
+                                <tr id="edit-valeur-{{ valeur.id }}" style="display:none;background:#fffdf5;">
+                                    <td colspan="4">
+                                        <form method="post" action="{{ path('admin_critere_valeur_edit', {id: valeur.id}) }}" style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('valeur_edit_' ~ valeur.id) }}">
+                                            <input type="text" name="valeur" class="admin-input" value="{{ valeur.valeur }}" required style="flex:1;min-width:150px;">
+                                            <input type="number" name="ordre" class="admin-input" value="{{ valeur.ordre }}" min="0" style="width:80px;" title="Ordre">
+                                            <label style="display:flex;align-items:center;gap:0.25rem;white-space:nowrap;font-size:0.85rem;">
+                                                <input type="checkbox" name="actif" value="1" {{ valeur.actif ? 'checked' : '' }}>
+                                                Actif
+                                            </label>
+                                            <button type="submit" class="btn-admin btn-admin-primary btn-admin-sm">
+                                                <i class="fa-solid fa-check" aria-hidden="true"></i>
+                                            </button>
+                                            <button type="button" class="btn-admin btn-admin-outline btn-admin-sm" onclick="document.getElementById('edit-valeur-{{ valeur.id }}').style.display='none';">
+                                                Annuler
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% endif %}
+
+                    {# Ajout d'une valeur #}
+                    <form method="post" action="{{ path('admin_critere_valeur_new', {id: critere.id}) }}" style="display:flex;gap:0.5rem;align-items:center;margin-top:0.75rem;flex-wrap:wrap;">
+                        <input type="hidden" name="_token" value="{{ csrf_token('valeur_new_' ~ critere.id) }}">
+                        <input type="text" name="valeur" class="admin-input" placeholder="Nouvelle valeur..." required style="flex:1;min-width:150px;">
+                        <input type="number" name="ordre" class="admin-input" value="0" min="0" style="width:80px;" title="Ordre d'affichage">
+                        <button type="submit" class="btn-admin btn-admin-primary btn-admin-sm">
+                            <i class="fa-solid fa-plus" aria-hidden="true"></i> Ajouter
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="admin-mt-3">
+            <a href="{{ path('admin_avis_list') }}" class="btn-admin btn-admin-outline">
+                <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Retour aux avis
+            </a>
+        </div>
+    </div>
+{% endblock %}

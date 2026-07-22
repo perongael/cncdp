@@ -1,0 +1,129 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ avis.numero }} — {{ avis.titre }} — CNCDP{% endblock %}
+
+{% block meta_description %}{{ avis.resume|default('Avis consultatif du CNCDP : ' ~ avis.titre)|striptags|u.truncate(160, '...') }}{% endblock %}
+
+{% block body %}
+{# ===== HERO ===== #}
+<section class="avis-hero" style="background: linear-gradient(135deg, #2d2540 0%, #9d38da 50%, #9335e4 100%);padding:3rem 0 2rem;color:#fff;position:relative;overflow:hidden;">
+    <div style="position:absolute;top:-80px;right:-80px;width:250px;height:250px;border-radius:50%;background:radial-gradient(circle, rgba(253,130,187,0.2) 0%, transparent 70%);pointer-events:none;"></div>
+    <div class="container" style="position:relative;z-index:1;">
+        <a href="{{ path('app_avis_index') }}" style="color:rgba(255,255,255,0.7);text-decoration:none;font-size:0.9rem;display:inline-block;margin-bottom:1rem;">
+            <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Retour aux avis
+        </a>
+        <div class="row">
+            <div class="col-lg-9">
+                <div class="d-flex align-items-center gap-3 mb-2" style="gap:0.75rem;">
+                    <code style="background:rgba(255,255,255,0.15);color:#fff;font-size:0.9rem;padding:0.3rem 0.75rem;border-radius:6px;font-weight:600;">{{ avis.numero }}</code>
+                    <span style="opacity:0.7;">{{ avis.dateAvis|date('d/m/Y') }}</span>
+                </div>
+                <h1 style="font-size:2rem;font-weight:800;text-shadow:0 2px 12px rgba(0,0,0,0.3);margin-bottom:0;">
+                    {{ avis.titre }}
+                </h1>
+            </div>
+        </div>
+    </div>
+</section>
+
+{# ===== CONTENU PRINCIPAL ===== #}
+<section style="padding:3rem 0;">
+    <div class="container">
+        <div class="row">
+            {# Colonne contenu #}
+            <div class="col-lg-8">
+                {% if avis.resume %}
+                <div style="background:#f8f9fa;border-left:4px solid #9d38da;padding:1.25rem 1.5rem;border-radius:0 8px 8px 0;margin-bottom:2rem;">
+                    <h2 style="font-size:1rem;font-weight:700;color:#2d2540;margin-bottom:0.5rem;">Résumé</h2>
+                    <p style="color:#495057;line-height:1.7;margin-bottom:0;">{{ avis.resume|nl2br }}</p>
+                </div>
+                {% endif %}
+
+                <div class="avis-contenu" style="line-height:1.8;color:#212529;font-size:1.05rem;">
+                    {{ avis.contenu|raw }}
+                </div>
+
+                {% if avis.pdfFilename %}
+                <div style="margin-top:2rem;padding:1.5rem;background:#f8f9fa;border-radius:12px;display:flex;align-items:center;flex-wrap:wrap;gap:1rem;">
+                    <div style="background:#9d38da;width:48px;height:48px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <i class="fa-solid fa-file-pdf" aria-hidden="true" style="color:#fff;font-size:1.25rem;"></i>
+                    </div>
+                    <div style="flex:1;">
+                        <strong style="color:#2d2540;">Télécharger l'avis complet</strong>
+                        <p style="color:#6c757d;margin:0;font-size:0.9rem;">Document PDF — {{ avis.numero }}</p>
+                    </div>
+                    <a href="{{ path('app_avis_pdf', {slug: avis.slug}) }}" class="btn" style="background:#de6d11;color:#fff;border-radius:8px;font-weight:600;white-space:nowrap;" target="_blank" rel="noopener">
+                        <i class="fa-solid fa-download" aria-hidden="true"></i> Télécharger le PDF
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+
+            {# Colonne latérale (métadonnées) #}
+            <div class="col-lg-4 mt-4 mt-lg-0">
+                {# Métadonnées #}
+                <div style="background:#f8f9fa;border-radius:12px;padding:1.5rem;margin-bottom:1.5rem;">
+                    <h3 style="font-size:1rem;font-weight:700;color:#2d2540;margin-bottom:1rem;">
+                        <i class="fa-solid fa-circle-info" aria-hidden="true" style="color:#9d38da;"></i> Informations
+                    </h3>
+                    <dl style="margin:0;">
+                        <dt style="font-size:0.8rem;color:#6c757d;text-transform:uppercase;letter-spacing:0.05em;">Numéro</dt>
+                        <dd style="font-weight:600;margin-bottom:0.75rem;">{{ avis.numero }}</dd>
+
+                        <dt style="font-size:0.8rem;color:#6c757d;text-transform:uppercase;letter-spacing:0.05em;">Date</dt>
+                        <dd style="margin-bottom:0.75rem;">{{ avis.dateAvis|date('d/m/Y') }}</dd>
+
+                        <dt style="font-size:0.8rem;color:#6c757d;text-transform:uppercase;letter-spacing:0.05em;">Année</dt>
+                        <dd style="margin-bottom:0.75rem;">{{ avis.annee }}</dd>
+                    </dl>
+                </div>
+
+                {# Critères #}
+                {% if avis.criteres|length > 0 %}
+                <div style="background:#f8f9fa;border-radius:12px;padding:1.5rem;margin-bottom:1.5rem;">
+                    <h3 style="font-size:1rem;font-weight:700;color:#2d2540;margin-bottom:1rem;">
+                        <i class="fa-solid fa-tags" aria-hidden="true" style="color:#fd82bb;"></i> Catégories
+                    </h3>
+                    {% for critereNom, valeurs in avis.criteresGroupes %}
+                        <div style="margin-bottom:0.75rem;">
+                            <small style="color:#6c757d;text-transform:uppercase;letter-spacing:0.05em;font-size:0.75rem;font-weight:600;">{{ critereNom }}</small>
+                            <div style="display:flex;flex-wrap:wrap;gap:0.3rem;margin-top:0.25rem;">
+                                {% for valeur in valeurs %}
+                                    <span style="background:#feeed4;color:#de6d11;font-size:0.75rem;padding:0.2rem 0.6rem;border-radius:20px;">{{ valeur.valeur }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {# Avis similaires #}
+        {% if avis_similaires is not empty %}
+        <div style="margin-top:3rem;padding-top:2rem;border-top:1px solid #dee2e6;">
+            <h2 style="font-size:1.5rem;font-weight:700;color:#2d2540;margin-bottom:1.5rem;">
+                <i class="fa-solid fa-layer-group" aria-hidden="true" style="color:#9d38da;"></i> Avis similaires
+            </h2>
+            <div class="row">
+                {% for similaire in avis_similaires %}
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card h-100" style="border:1px solid #dee2e6;border-radius:10px;transition:transform 0.2s;">
+                        <div class="card-body" style="padding:1.25rem;">
+                            <code style="background:#f3e8ff;color:#7c3aed;font-size:0.75rem;padding:0.15rem 0.5rem;border-radius:4px;font-weight:600;">{{ similaire.numero }}</code>
+                            <h3 style="font-size:0.95rem;font-weight:700;margin-top:0.5rem;line-height:1.4;">
+                                <a href="{{ path('app_avis_show', {slug: similaire.slug}) }}" style="color:#2d2540;text-decoration:none;">
+                                    {{ similaire.titre }}
+                                </a>
+                            </h3>
+                            <small style="color:#adb5bd;">{{ similaire.dateAvis|date('d/m/Y') }}</small>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

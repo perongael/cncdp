@@ -2,6 +2,7 @@
 
 namespace App\Controller\Admin;
 
+use App\Repository\AvisRepository;
 use App\Repository\PageRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -14,9 +15,12 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class AdminController extends AbstractController
 {
     #[Route('', name: 'admin_dashboard')]
-    public function dashboard(): Response
+    public function dashboard(AvisRepository $avisRepository, PageRepository $pageRepository): Response
     {
-        return $this->render('admin/dashboard.html.twig');
+        return $this->render('admin/dashboard.html.twig', [
+            'avis_count' => $avisRepository->countPublished(),
+            'pages_count' => count($pageRepository->findAllPublished()),
+        ]);
     }
 
     #[Route('/accueil', name: 'admin_homepage')]
