@@ -1,0 +1,164 @@
+# Configuration du HTML Sanitizer pour sécuriser le contenu produit par GrapesJS
+# Référence : https://symfony.com/doc/current/html_sanitizer.html
+
+framework:
+    html_sanitizer:
+        sanitizers:
+            # Profil pour le contenu des pages (GrapesJS + Bootstrap 4)
+            app.page_content:
+                # Longueur max du HTML accepté (défaut Symfony : 20 000 — trop court pour nos pages)
+                max_input_length: 1000000
+
+                # Bloque complètement les balises dangereuses
+                # Note : form, input, button, select, textarea, label NON bloqués
+                # car nécessaires pour les formulaires de contact et autres pages interactives
+                block_elements: ['script', 'object', 'embed', 'iframe', 'noscript', 'link', 'meta', 'base']
+
+                # Balises autorisées avec leurs attributs
+                allow_safe_elements: true
+
+                # Éléments de formulaire explicitement autorisés
+                # (non inclus dans la liste "safe" par défaut)
+                allow_elements:
+                    - form
+                    - input
+                    - button
+                    - select
+                    - option
+                    - optgroup
+                    - textarea
+                    - fieldset
+                    - legend
+                    - label
+                    - datalist
+
+                # Autorise les liens et médias relatifs (href="#", src="/img/...")
+                allow_relative_links: true
+                allow_relative_medias: true
+
+                # Attributs autorisés
+                allow_attributes:
+                    # Attributs globaux HTML
+                    class: ['*']
+                    id: ['*']
+                    style: ['*']
+                    title: ['*']
+                    lang: ['*']
+                    dir: ['*']
+                    hidden: ['*']
+
+                    # Attributs data-* pour Bootstrap JS (data-ride, data-toggle, data-target, etc.)
+                    data-ride: ['*']
+                    data-toggle: ['*']
+                    data-target: ['*']
+                    data-slide-to: ['*']
+                    data-slide: ['*']
+                    data-parent: ['*']
+                    data-dismiss: ['*']
+                    data-interval: ['*']
+                    data-pause: ['*']
+                    data-keyboard: ['*']
+                    data-wrap: ['*']
+
+                    # Attributs data-gjs-* pour GrapesJS
+                    data-gjs-type: ['*']
+                    data-gjs-name: ['*']
+                    data-gjs-highlightable: ['*']
+
+                    # Attributs médias
+                    src: ['*']
+                    alt: ['*']
+                    href: ['*']
+                    target: ['a']
+                    rel: ['a']
+                    type: ['*']
+                    width: ['*']
+                    height: ['*']
+                    loading: ['img']
+                    decoding: ['img']
+
+                    # Attributs ARIA et accessibilité
+                    role: ['*']
+                    aria-*: ['*']
+
+                    # Médias
+                    autoplay: ['video', 'audio']
+                    controls: ['video', 'audio']
+                    loop: ['video', 'audio']
+                    muted: ['video', 'audio']
+                    poster: ['video']
+
+                    # Attributs de formulaire
+                    action: ['form']
+                    method: ['form']
+                    name: ['*']
+                    placeholder: ['input', 'textarea']
+                    required: ['input', 'select', 'textarea']
+                    rows: ['textarea']
+                    cols: ['textarea']
+                    for: ['label']
+                    value: ['input', 'button', 'option']
+                    checked: ['input']
+                    selected: ['option']
+                    disabled: ['*']
+                    readonly: ['*']
+                    autocomplete: ['input', 'form']
+                    minlength: ['input', 'textarea']
+                    maxlength: ['input', 'textarea']
+                    min: ['input']
+                    max: ['input']
+                    step: ['input']
+                    pattern: ['input']
+                    multiple: ['input', 'select']
+                    novalidate: ['form']
+                    enctype: ['form']
+                    accept: ['input']
+                    size: ['input', 'select']
+
+                # Bloque les attributs inline event handlers (XSS)
+                drop_attributes:
+                    - onload
+                    - onerror
+                    - onclick
+                    - ondblclick
+                    - onmousedown
+                    - onmouseup
+                    - onmouseover
+                    - onmousemove
+                    - onmouseout
+                    - onkeypress
+                    - onkeydown
+                    - onkeyup
+                    - onfocus
+                    - onblur
+                    - onchange
+                    - onsubmit
+                    - onreset
+                    - onselect
+                    - onscroll
+                    - onresize
+                    - onabort
+                    - onbeforeunload
+                    - onunload
+                    - oncontextmenu
+                    - ondrag
+                    - ondragend
+                    - ondragenter
+                    - ondragleave
+                    - ondragover
+                    - ondragstart
+                    - ondrop
+                    - oncopy
+                    - oncut
+                    - onpaste
+                    - ontouchstart
+                    - ontouchend
+                    - ontouchmove
+                    - ontouchcancel
+                    - onanimationstart
+                    - onanimationend
+                    - onanimationiteration
+                    - ontransitionend
+                    - oninput
+                    - oninvalid
+                    - onsearch

@@ -1,0 +1,132 @@
+{% extends 'admin/base_admin.html.twig' %}
+
+{% block title %}Apparence — Administration CNCDP{% endblock %}
+
+{% block admin_body %}
+    <div class="admin-page-header">
+        <p class="breadcrumb">
+            <a href="{{ path('admin_dashboard') }}">Administration</a> &rsaquo; Apparence
+        </p>
+        <h1>Personnaliser l'apparence</h1>
+    </div>
+
+    <div class="admin-content">
+        {% for type, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="admin-alert admin-alert-{{ type == 'success' ? 'success' : type == 'error' ? 'danger' : 'info' }}" role="status">
+                    <i class="fa-solid fa-circle-{{ type == 'success' ? 'check' : type == 'error' ? 'exclamation' : 'info' }}" aria-hidden="true"></i>
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endfor %}
+
+        <form method="post" action="{{ path('admin_appearance') }}" enctype="multipart/form-data">
+            {# Logo #}
+            <div class="admin-card admin-mb-4">
+                <div class="admin-card-header">
+                    <h2><i class="fa-solid fa-image" aria-hidden="true"></i> Logo du site</h2>
+                </div>
+                <div class="admin-card-body">
+                    <p><strong>Logo actuel :</strong></p>
+                    <img src="{{ asset('images/' ~ site.logo) }}" alt="Logo CNCDP" style="height:3rem;margin-bottom:1rem;">
+                    <div class="admin-form-group admin-mb-0">
+                        <label for="logo_file">Remplacer le logo</label>
+                        <input type="file" id="logo_file" name="logo_file" class="admin-form-control" accept="image/png,image/jpeg,image/svg+xml">
+                        <p class="form-hint">Format recommandé : PNG avec fond transparent, 200×80 pixels minimum.</p>
+                    </div>
+                </div>
+            </div>
+
+            {# Couleurs #}
+            <div class="admin-card admin-mb-4">
+                <div class="admin-card-header">
+                    <h2><i class="fa-solid fa-palette" aria-hidden="true"></i> Palette de couleurs</h2>
+                </div>
+                <div class="admin-card-body">
+                    <div class="admin-grid" style="grid-template-columns: repeat(3, 1fr);">
+                        {# Violet #}
+                        <div>
+                            <p class="admin-mb-3"><strong>🟣 Violets</strong> — boutons, liens, navigation</p>
+                            <div class="admin-form-group">
+                                <label for="violet_vif">Violet vif</label>
+                                <input type="color" id="violet_vif" name="violet_vif" class="admin-form-control" value="#9d38da" style="height:3rem;padding:0.25rem;width:6rem;">
+                                <small>#9d38da — Boutons principaux</small>
+                            </div>
+                            <div class="admin-form-group">
+                                <label for="violet_profond">Violet profond</label>
+                                <input type="color" id="violet_profond" name="violet_profond" class="admin-form-control" value="#9335e4" style="height:3rem;padding:0.25rem;width:6rem;">
+                                <small>#9335e4 — Hover, footer</small>
+                            </div>
+                            <div class="admin-form-group">
+                                <label for="violet_clair">Violet clair</label>
+                                <input type="color" id="violet_clair" name="violet_clair" class="admin-form-control" value="#daafff" style="height:3rem;padding:0.25rem;width:6rem;">
+                                <small>#daafff — Fonds, survols</small>
+                            </div>
+                        </div>
+                        {# Rose #}
+                        <div>
+                            <p class="admin-mb-3"><strong>🌸 Roses</strong> — accents, sections, témoignages</p>
+                            <div class="admin-form-group">
+                                <label for="rose_vif">Rose vif</label>
+                                <input type="color" id="rose_vif" name="rose_vif" class="admin-form-control" value="#fd82bb" style="height:3rem;padding:0.25rem;width:6rem;">
+                                <small>#fd82bb — Accents, badges</small>
+                            </div>
+                            <div class="admin-form-group">
+                                <label for="rose_clair">Rose clair</label>
+                                <input type="color" id="rose_clair" name="rose_clair" class="admin-form-control" value="#ffdaeb" style="height:3rem;padding:0.25rem;width:6rem;">
+                                <small>#ffdaeb — Fonds de section</small>
+                            </div>
+                            <div class="admin-form-group">
+                                <label for="rose_tres_clair">Rose très clair</label>
+                                <input type="color" id="rose_tres_clair" name="rose_tres_clair" class="admin-form-control" value="#ffe3e7" style="height:3rem;padding:0.25rem;width:6rem;">
+                                <small>#ffe3e7 — Fonds subtils</small>
+                            </div>
+                        </div>
+                        {# Orange #}
+                        <div>
+                            <p class="admin-mb-3"><strong>🍊 Oranges</strong> — mise en avant, alertes, CTA</p>
+                            <div class="admin-form-group">
+                                <label for="orange_vif">Orange vif</label>
+                                <input type="color" id="orange_vif" name="orange_vif" class="admin-form-control" value="#de6d11" style="height:3rem;padding:0.25rem;width:6rem;">
+                                <small>#de6d11 — Boutons CTA, liens forts</small>
+                            </div>
+                            <div class="admin-form-group">
+                                <label for="orange_moyen">Orange moyen</label>
+                                <input type="color" id="orange_moyen" name="orange_moyen" class="admin-form-control" value="#fcbc63" style="height:3rem;padding:0.25rem;width:6rem;">
+                                <small>#fcbc63 — Éléments interactifs</small>
+                            </div>
+                            <div class="admin-form-group">
+                                <label for="orange_clair">Orange clair</label>
+                                <input type="color" id="orange_clair" name="orange_clair" class="admin-form-control" value="#feeed4" style="height:3rem;padding:0.25rem;width:6rem;">
+                                <small>#feeed4 — Fonds de mise en avant</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# Typographie #}
+            <div class="admin-card admin-mb-4">
+                <div class="admin-card-header">
+                    <h2><i class="fa-solid fa-font" aria-hidden="true"></i> Typographie</h2>
+                </div>
+                <div class="admin-card-body">
+                    <div class="admin-form-group">
+                        <label for="font_family">Police de caractères</label>
+                        <select id="font_family" name="font_family" class="admin-form-control">
+                            <option value="Inter" selected>Inter (moderne, recommandée)</option>
+                            <option value="Roboto">Roboto (classique)</option>
+                            <option value="Open Sans">Open Sans (accessible)</option>
+                            <option value="Lato">Lato (élégante)</option>
+                        </select>
+                        <p class="form-hint">La police utilisée pour tous les textes du site.</p>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-admin btn-admin-primary">
+                <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Enregistrer les paramètres
+            </button>
+        </form>
+    </div>
+{% endblock %}

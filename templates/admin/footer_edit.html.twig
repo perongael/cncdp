@@ -1,0 +1,109 @@
+{% extends 'admin/base_admin.html.twig' %}
+
+{% block title %}Bas de page — Administration CNCDP{% endblock %}
+
+{% block admin_body %}
+    <div class="admin-page-header">
+        <p class="breadcrumb">
+            <a href="{{ path('admin_dashboard') }}">Administration</a> &rsaquo; Bas de page
+        </p>
+        <h1>Modifier le bas de page</h1>
+    </div>
+
+    <div class="admin-content">
+        {% for type, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="admin-alert admin-alert-{{ type == 'success' ? 'success' : 'info' }}" role="status">
+                    <i class="fa-solid fa-circle-{{ type == 'success' ? 'check' : 'info' }}" aria-hidden="true"></i>
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endfor %}
+
+        <form method="post" action="{{ path('admin_footer') }}">
+            {# Ligne 1 : Coordonnées | Liens utiles #}
+            <div class="admin-grid admin-mb-4" style="grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start;">
+                <div class="admin-card">
+                    <div class="admin-card-header">
+                        <h2><i class="fa-solid fa-location-dot" aria-hidden="true"></i> Coordonnées</h2>
+                    </div>
+                    <div class="admin-card-body">
+                        <div class="admin-form-group">
+                            <label for="address"><strong>Adresse postale</strong></label>
+                            <textarea id="address" name="address" class="admin-form-control" rows="4" placeholder="71, avenue Edouard Vaillant&#10;92100 Boulogne-Billancourt&#10;France">{{ footer.address }}</textarea>
+                            <p class="form-hint" style="color:#6b647a;font-size:0.8rem;">Chaque ligne sera affichée séparément.</p>
+                        </div>
+                        <div class="admin-form-group">
+                            <label for="email"><strong>Email de contact</strong></label>
+                            <input type="email" id="email" name="email" class="admin-form-control" value="{{ footer.email }}" placeholder="contact@cncdp.fr">
+                        </div>
+                    </div>
+                </div>
+                <div class="admin-card">
+                    <div class="admin-card-header">
+                        <h2><i class="fa-solid fa-link" aria-hidden="true"></i> Liens utiles</h2>
+                    </div>
+                    <div class="admin-card-body">
+                        <div class="admin-form-group">
+                            <label for="links"><strong>Liste des liens</strong></label>
+                            <textarea id="links" name="links" class="admin-form-control" rows="6" placeholder="Code de déontologie 2021 | /code-de-deontologie&#10;Index des avis | /avis&#10;Adhésion des organisations | /adhesion&#10;Demande d'avis consultatif | /saisine">{{ footer.links }}</textarea>
+                            <p class="form-hint" style="color:#6b647a;font-size:0.8rem;">Format : <strong>Texte du lien | URL</strong> — un lien par ligne.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# Ligne 2 : Liens Contact | Liens légaux #}
+            <div class="admin-grid admin-mb-4" style="grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start;">
+                <div class="admin-card">
+                    <div class="admin-card-header">
+                        <h2><i class="fa-solid fa-address-book" aria-hidden="true"></i> Liens Contact</h2>
+                    </div>
+                    <div class="admin-card-body">
+                        <div class="admin-form-group">
+                            <label for="contact_links"><strong>Liens de la colonne Contact</strong></label>
+                            <textarea id="contact_links" name="contact_links" class="admin-form-control" rows="4" placeholder="Formulaire de saisine en ligne | /saisine&#10;Nous écrire | /contact">{{ footer.contact_links|default('') }}</textarea>
+                            <p class="form-hint" style="color:#6b647a;font-size:0.8rem;">Format : <strong>Texte du lien | URL</strong> — un lien par ligne.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="admin-card">
+                    <div class="admin-card-header">
+                        <h2><i class="fa-solid fa-scale-balanced" aria-hidden="true"></i> Liens légaux</h2>
+                    </div>
+                    <div class="admin-card-body">
+                        <div class="admin-form-group">
+                            <label for="bottom_links"><strong>Liens du bandeau inférieur</strong></label>
+                            <textarea id="bottom_links" name="bottom_links" class="admin-form-control" rows="3" placeholder="Mentions légales | /mentions-legales&#10;Politique de confidentialité | /confidentialite">{{ footer.bottom_links|default('') }}</textarea>
+                            <p class="form-hint" style="color:#6b647a;font-size:0.8rem;">Format : <strong>Texte du lien | URL</strong> — un lien par ligne. Affichés en ligne au-dessus du copyright.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# Ligne 3 : Copyright (seul) #}
+            <div class="admin-card admin-mb-4" style="max-width:50%;">
+                <div class="admin-card-header">
+                    <h2><i class="fa-solid fa-copyright" aria-hidden="true"></i> Copyright</h2>
+                </div>
+                <div class="admin-card-body">
+                    <div class="admin-form-group">
+                        <input type="text" id="bottom_text" name="bottom_text" class="admin-form-control" value="{{ footer.bottom_text }}" placeholder="© {{ 'now'|date('Y') }} CNCDP — Tous droits réservés">
+                        <p class="form-hint" style="color:#6b647a;font-size:0.8rem;">Utilisez <code>{{ '{{' }} 'now'|date('Y') {{ '}}' }}</code> pour l'année dynamique.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="admin-d-flex" style="gap:1rem;">
+                <button type="submit" class="btn-admin btn-admin-primary">
+                    <i class="fa-solid fa-check" aria-hidden="true"></i>
+                    Enregistrer
+                </button>
+                <a href="{{ path('admin_dashboard') }}" class="btn-admin btn-admin-outline">
+                    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                    Retour au tableau de bord
+                </a>
+            </div>
+        </form>
+    </div>
+{% endblock %}

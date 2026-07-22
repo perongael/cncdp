@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion — Administration CNCDP</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>🔐</text></svg>">
+
+    {# FontAwesome #}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
+
+    {# cncdp.css pour les variables CSS (--violet-vif, etc.) #}
+    <link rel="stylesheet" href="{{ asset('styles/cncdp.css') }}">
+    {# admin.css pour les classes admin (login-card, btn-admin, etc.) #}
+    <link rel="stylesheet" href="{{ asset('styles/admin.css') }}">
+
+    <style>
+        .login-page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #2d2540 0%, #3d3355 40%, #4a3f6b 100%);
+            padding: 1.5rem;
+        }
+
+        .login-card {
+            background: #fff;
+            border-radius: 1.25rem;
+            padding: 2.75rem 2.5rem;
+            width: 100%;
+            max-width: 26rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+        }
+
+        .login-card .login-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.25rem;
+        }
+
+        .login-card .login-logo img {
+            height: 4rem;
+            width: auto;
+        }
+
+        .login-card h1 {
+            font-family: var(--font-principale);
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-align: center;
+            color: var(--violet-profond);
+            margin-bottom: 0.25rem;
+        }
+
+        .login-card .login-subtitle {
+            text-align: center;
+            color: var(--admin-text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+        }
+
+        .login-card .admin-alert {
+            margin-bottom: 1.5rem;
+        }
+
+        .login-card .admin-form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .login-card .admin-form-group label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--admin-text);
+            margin-bottom: 0.375rem;
+        }
+
+        .login-card .admin-form-control {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            font-size: 0.95rem;
+            border: 1.5px solid var(--admin-border);
+            border-radius: 0.625rem;
+            background: #faf9fb;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            font-family: var(--font-principale);
+            box-sizing: border-box;
+        }
+
+        .login-card .admin-form-control:focus {
+            outline: none;
+            border-color: var(--violet-vif);
+            box-shadow: 0 0 0 3px rgba(157, 56, 218, 0.15);
+            background: #fff;
+        }
+
+        .login-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            width: 100%;
+            padding: 0.85rem;
+            font-family: var(--font-principale);
+            font-size: 1rem;
+            font-weight: 600;
+            color: #fff;
+            background: var(--violet-vif);
+            border: none;
+            border-radius: 0.625rem;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            margin-top: 0.5rem;
+        }
+
+        .login-btn:hover {
+            background: var(--violet-profond);
+        }
+
+        .login-btn:active {
+            transform: scale(0.98);
+        }
+
+        .login-back {
+            display: block;
+            text-align: center;
+            margin-top: 1.25rem;
+            font-size: 0.85rem;
+            color: var(--admin-text-muted);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .login-back:hover {
+            color: var(--violet-vif);
+        }
+    </style>
+</head>
+<body class="login-page">
+
+    <div class="login-card">
+        <div class="login-logo">
+            <img src="{{ asset('images/logo_cncdp_transp.png') }}" alt="Logo CNCDP">
+        </div>
+        <h1>Administration</h1>
+        <p class="login-subtitle">Connectez-vous pour gérer le site du CNCDP</p>
+
+        {% if error %}
+            <div class="admin-alert admin-alert-warning" role="alert">
+                <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                {{ error.messageKey|trans(error.messageData, 'security') }}
+            </div>
+        {% endif %}
+
+        <form method="post">
+            <div class="admin-form-group">
+                <label for="username">
+                    <i class="fa-solid fa-envelope" aria-hidden="true" style="margin-right:0.25rem;"></i>Identifiant
+                </label>
+                <input type="text" id="username" name="_username" class="admin-form-control" value="{{ last_username }}" placeholder="admin@cncdp.fr" required autofocus autocomplete="username">
+            </div>
+
+            <div class="admin-form-group">
+                <label for="password">
+                    <i class="fa-solid fa-lock" aria-hidden="true" style="margin-right:0.25rem;"></i>Mot de passe
+                </label>
+                <input type="password" id="password" name="_password" class="admin-form-control" placeholder="Votre mot de passe" required autocomplete="current-password">
+            </div>
+
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+
+            <button type="submit" class="login-btn">
+                <i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i>
+                Se connecter
+            </button>
+        </form>
+
+        <a href="{{ path('app_home') }}" class="login-back">
+            <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Retour au site
+        </a>
+    </div>
+
+</body>
+</html>

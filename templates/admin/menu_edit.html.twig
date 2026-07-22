@@ -1,0 +1,408 @@
+{% extends 'admin/base_admin.html.twig' %}
+
+{% block title %}Menu — Administration CNCDP{% endblock %}
+
+{% block admin_body %}
+    <div class="admin-page-header">
+        <p class="breadcrumb">
+            <a href="{{ path('admin_dashboard') }}">Administration</a> &rsaquo; Menu
+        </p>
+        <h1>Modifier le menu de navigation</h1>
+    </div>
+
+    <div class="admin-content">
+        {% for type, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="admin-alert admin-alert-{{ type == 'success' ? 'success' : type == 'error' ? 'danger' : 'info' }}" role="status">
+                    <i class="fa-solid fa-circle-{{ type == 'success' ? 'check' : type == 'error' ? 'exclamation' : 'info' }}" aria-hidden="true"></i>
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endfor %}
+
+        <form method="post" action="{{ path('admin_menu') }}" id="menuForm">
+            <input type="hidden" name="menu_data" id="menuData" value="{{ menuJson|e('html_attr') }}">
+
+            {# Barre d'outils #}
+            <div class="admin-d-flex admin-mb-3" style="gap:1rem;align-items:center;flex-wrap:wrap;">
+                <button type="button" class="btn-admin btn-admin-primary" onclick="addMenuItem(null)">
+                    <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                    Ajouter un élément
+                </button>
+                <span class="form-hint" style="color:#6b647a;font-size:0.8rem;">
+                    <i class="fa-solid fa-info-circle" aria-hidden="true"></i>
+                    ↑↓ Réorganiser &nbsp;|&nbsp; <i class="fa-solid fa-outdent"></i> Remonter &nbsp;|&nbsp; <i class="fa-solid fa-indent"></i> Descendre &nbsp;|&nbsp; <i class="fa-solid fa-plus"></i> Ajouter sous-menu
+                </span>
+            </div>
+
+            {# Zone des éléments du menu #}
+            <div id="menuBuilder" class="admin-mb-4">
+                {# Rempli par JavaScript #}
+            </div>
+
+            {# Boutons d'action #}
+            <div class="admin-d-flex" style="gap:1rem;">
+                <button type="submit" class="btn-admin btn-admin-primary">
+                    <i class="fa-solid fa-check" aria-hidden="true"></i>
+                    Enregistrer
+                </button>
+                <a href="{{ path('admin_dashboard') }}" class="btn-admin btn-admin-outline">
+                    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                    Retour au tableau de bord
+                </a>
+            </div>
+        </form>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+(function() {
+    const builder = document.getElementById('menuBuilder');
+    const dataInput = document.getElementById('menuData');
+
+    // Charger les données initiales
+    let menuData;
+    try {
+        menuData = JSON.parse(dataInput.value);
+    } catch(e) {
+        menuData = { items: [] };
+    }
+
+    function uid() {
+        return 'm_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+    }
+
+    // === RENDU ===
+    function render() {
+        builder.innerHTML = '';
+        menuData.items.forEach((item, index) => {
+            builder.appendChild(buildItemDOM(item, index, [], 0));
+        });
+    }
+
+    // Construire le DOM pour un item (utilise data-path pour la reconstruction)
+    function buildItemDOM(item, index, parentPath, level) {
+        const path = [...parentPath, index];
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'menu-item-wrapper';
+        wrapper.setAttribute('data-path', path.join(','));
+        wrapper.setAttribute('data-level', level);
+
+        const card = document.createElement('div');
+        card.className = 'menu-item-card menu-item-level-' + level;
+
+        // Label
+        const labelInput = document.createElement('input');
+        labelInput.type = 'text';
+        labelInput.className = 'menu-item-label';
+        labelInput.value = item.label || '';
+        labelInput.placeholder = 'Nom du lien';
+        labelInput.setAttribute('data-field', 'label');
+
+        // URL
+        const urlInput = document.createElement('input');
+        urlInput.type = 'text';
+        urlInput.className = 'menu-item-url';
+        urlInput.value = item.url || '#';
+        urlInput.placeholder = 'URL (ex: /page ou #)';
+        urlInput.setAttribute('data-field', 'url');
+
+        // Boutons
+        const actions = document.createElement('div');
+        actions.className = 'menu-item-actions';
+
+        const btnUp = document.createElement('button');
+        btnUp.type = 'button';
+        btnUp.className = 'btn-admin btn-admin-sm btn-admin-outline';
+        btnUp.innerHTML = '<i class="fa-solid fa-arrow-up"></i>';
+        btnUp.title = 'Monter';
+        btnUp.addEventListener('click', (e) => { e.stopPropagation(); moveItem(path, -1); });
+
+        const btnDown = document.createElement('button');
+        btnDown.type = 'button';
+        btnDown.className = 'btn-admin btn-admin-sm btn-admin-outline';
+        btnDown.innerHTML = '<i class="fa-solid fa-arrow-down"></i>';
+        btnDown.title = 'Descendre';
+        btnDown.addEventListener('click', (e) => { e.stopPropagation(); moveItem(path, 1); });
+
+        // Promouvoir (outdent) — seulement si pas au niveau racine
+        const btnOutdent = document.createElement('button');
+        btnOutdent.type = 'button';
+        btnOutdent.className = 'btn-admin btn-admin-sm btn-admin-outline';
+        btnOutdent.innerHTML = '<i class="fa-solid fa-outdent"></i>';
+        btnOutdent.title = 'Remonter d\'un niveau';
+        if (level === 0) {
+            btnOutdent.classList.add('btn-add-submenu-disabled');
+            btnOutdent.title = 'Déjà au niveau racine';
+        } else {
+            btnOutdent.addEventListener('click', (e) => { e.stopPropagation(); promoteItem(path); });
+        }
+
+        // Descendre (indent) — en faire un sous-menu de l'item au-dessus
+        const btnIndent = document.createElement('button');
+        btnIndent.type = 'button';
+        btnIndent.className = 'btn-admin btn-admin-sm btn-admin-outline';
+        btnIndent.innerHTML = '<i class="fa-solid fa-indent"></i>';
+        btnIndent.title = 'Descendre d\'un niveau (sous-menu de l\'élément au-dessus)';
+        // Désactivé si : premier de la liste OU l'item au-dessus est déjà au niveau 2 (max)
+        const isFirst = (path[path.length - 1] === 0);
+        if (isFirst || (level >= 2)) {
+            btnIndent.classList.add('btn-add-submenu-disabled');
+            btnIndent.title = isFirst ? 'Aucun élément au-dessus' : 'Profondeur maximale atteinte';
+        } else {
+            btnIndent.addEventListener('click', (e) => { e.stopPropagation(); demoteItem(path); });
+        }
+
+        const btnChild = document.createElement('button');
+        btnChild.type = 'button';
+        btnChild.className = 'btn-admin btn-admin-sm btn-admin-outline';
+        btnChild.innerHTML = '<i class="fa-solid fa-plus"></i>';
+        btnChild.title = 'Ajouter un sous-menu';
+        // Limiter à 3 niveaux (0, 1, 2) — pas de sous-menu au niveau 2
+        if (level >= 2) {
+            btnChild.classList.add('btn-add-submenu-disabled');
+            btnChild.title = 'Profondeur maximale atteinte (3 niveaux)';
+        } else {
+            btnChild.addEventListener('click', (e) => { e.stopPropagation(); addMenuItem(path); });
+        }
+
+        const btnDel = document.createElement('button');
+        btnDel.type = 'button';
+        btnDel.className = 'btn-admin btn-admin-sm btn-admin-danger';
+        btnDel.innerHTML = '<i class="fa-solid fa-trash"></i>';
+        btnDel.title = 'Supprimer';
+        btnDel.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (confirm('Supprimer « ' + (item.label || 'cet élément') + ' » ?' + (item.children && item.children.length > 0 ? '\nSes sous-menus seront également supprimés.' : ''))) {
+                removeItem(path);
+            }
+        });
+
+        actions.appendChild(btnUp);
+        actions.appendChild(btnDown);
+        actions.appendChild(btnOutdent);
+        actions.appendChild(btnIndent);
+        actions.appendChild(btnChild);
+        actions.appendChild(btnDel);
+
+        const row = document.createElement('div');
+        row.className = 'menu-item-row';
+        row.appendChild(labelInput);
+        row.appendChild(urlInput);
+        row.appendChild(actions);
+        card.appendChild(row);
+        wrapper.appendChild(card);
+
+        // Enfants
+        if (item.children && item.children.length > 0) {
+            const childrenContainer = document.createElement('div');
+            childrenContainer.className = 'menu-item-children';
+            item.children.forEach((child, childIndex) => {
+                childrenContainer.appendChild(buildItemDOM(child, childIndex, path, level + 1));
+            });
+            wrapper.appendChild(childrenContainer);
+        }
+
+        return wrapper;
+    }
+
+    // === NAVIGATION DANS L'ARBRE ===
+    function getItemByPath(path) {
+        let current = menuData.items;
+        for (let i = 0; i < path.length - 1; i++) {
+            if (!current[path[i]] || !current[path[i]].children) return null;
+            current = current[path[i]].children;
+        }
+        return { parent: current, index: path[path.length - 1], item: current[path[path.length - 1]] };
+    }
+
+    // === OPÉRATIONS ===
+    function moveItem(path, direction) {
+        const ref = getItemByPath(path);
+        if (!ref) return;
+        const newIndex = ref.index + direction;
+        if (newIndex < 0 || newIndex >= ref.parent.length) return;
+        const temp = ref.parent[ref.index];
+        ref.parent[ref.index] = ref.parent[newIndex];
+        ref.parent[newIndex] = temp;
+        render();
+    }
+
+    function removeItem(path) {
+        const ref = getItemByPath(path);
+        if (!ref) return;
+        ref.parent.splice(ref.index, 1);
+        render();
+    }
+
+    // Promouvoir un sous-menu au niveau supérieur (outdent)
+    function promoteItem(path) {
+        if (path.length < 2) return; // Déjà au niveau racine
+
+        const ref = getItemByPath(path);
+        if (!ref || !ref.item) return;
+
+        const item = ref.item;
+        const parentPath = path.slice(0, -1);
+        const parentRef = getItemByPath(parentPath);
+        if (!parentRef) return;
+
+        // Supprimer de l'emplacement actuel
+        ref.parent.splice(ref.index, 1);
+
+        // Insérer dans le grand-parent, juste après le parent
+        const grandParent = parentRef.parent;
+        const parentIndex = parentRef.index;
+        grandParent.splice(parentIndex + 1, 0, item);
+
+        render();
+    }
+
+    // Descendre un item pour le transformer en sous-menu de l'item au-dessus (indent)
+    function demoteItem(path) {
+        if (path.length === 0 || path[path.length - 1] === 0) return; // Premier de la liste, rien au-dessus
+
+        const ref = getItemByPath(path);
+        if (!ref || !ref.item) return;
+
+        // Vérifier que l'item au-dessus peut recevoir des enfants (niveau < 2)
+        const parentPath = path.slice(0, -1);
+        const parentRef = getItemByPath(parentPath);
+        if (!parentRef) return;
+        // Le niveau de l'item au-dessus = parentPath.length (0 = top, 1 = sub, 2 = sub-sub)
+        if (parentPath.length >= 2) return; // L'item au-dessus est déjà au niveau 2, ne peut pas avoir d'enfants
+
+        const item = ref.item;
+        const aboveIndex = ref.index - 1;
+        const aboveItem = ref.parent[aboveIndex];
+
+        // Supprimer de l'emplacement actuel
+        ref.parent.splice(ref.index, 1);
+
+        // Ajouter comme dernier enfant de l'item au-dessus
+        if (!aboveItem.children) aboveItem.children = [];
+        aboveItem.children.push(item);
+
+        render();
+    }
+
+    function addMenuItem(parentPath) {
+        // Limiter à 3 niveaux max (0, 1, 2) — bloquer l'ajout au niveau 2+
+        if (parentPath !== null && parentPath.length >= 3) {
+            return;
+        }
+
+        const newItem = { id: uid(), label: '', url: '#', children: [] };
+
+        if (parentPath === null) {
+            menuData.items.push(newItem);
+        } else {
+            const ref = getItemByPath(parentPath);
+            if (!ref || !ref.item) return;
+            if (!ref.item.children) ref.item.children = [];
+            ref.item.children.push(newItem);
+        }
+        render();
+
+        // Focus sur le nouveau champ
+        setTimeout(() => {
+            const wrappers = builder.querySelectorAll('.menu-item-wrapper');
+            const last = wrappers[wrappers.length - 1];
+            if (last) {
+                const label = last.querySelector('.menu-item-label');
+                if (label) label.focus();
+            }
+        }, 100);
+    }
+
+    // === SÉRIALISATION : lit le DOM pour garantir la cohérence ===
+    function serializeFromDOM() {
+        function readLevel(container) {
+            const items = [];
+            const wrappers = container.querySelectorAll(':scope > .menu-item-wrapper');
+            wrappers.forEach(wrapper => {
+                const card = wrapper.querySelector(':scope > .menu-item-card');
+                if (!card) return;
+                const labelInput = card.querySelector('[data-field="label"]');
+                const urlInput = card.querySelector('[data-field="url"]');
+                const childrenContainer = wrapper.querySelector(':scope > .menu-item-children');
+
+                const item = {
+                    id: uid(),
+                    label: labelInput ? labelInput.value.trim() : '',
+                    url: urlInput ? urlInput.value.trim() || '#' : '#',
+                    children: childrenContainer ? readLevel(childrenContainer) : []
+                };
+                items.push(item);
+            });
+            return items;
+        }
+
+        return { items: readLevel(builder) };
+    }
+
+    // Intercepter la soumission du formulaire
+    document.getElementById('menuForm').addEventListener('submit', function(e) {
+        const data = serializeFromDOM();
+        // Récupérer les IDs existants quand c'est possible
+        function mergeIds(existing, fresh) {
+            return fresh.map((item, i) => {
+                if (existing[i] && existing[i].id && existing[i].label === item.label) {
+                    item.id = existing[i].id;
+                }
+                if (item.children.length > 0 && existing[i] && existing[i].children) {
+                    item.children = mergeIds(existing[i].children, item.children);
+                }
+                return item;
+            });
+        }
+        data.items = mergeIds(menuData.items, data.items);
+        dataInput.value = JSON.stringify(data);
+    });
+
+    // Exposer addMenuItem globalement
+    window.addMenuItem = addMenuItem;
+
+    // Rendu initial
+    render();
+})();
+</script>
+
+<style>
+.menu-item-wrapper { margin-bottom: 0.25rem; }
+
+/* Indentation cumulative via le wrapper (les wrappers s'imbriquent) */
+.menu-item-wrapper[data-level="0"] { margin-left: 0; }
+.menu-item-wrapper[data-level="1"] { margin-left: 2.5rem; }
+.menu-item-wrapper[data-level="2"] { margin-left: 2.5rem; }
+.menu-item-wrapper[data-level="3"] { margin-left: 2rem; }
+.menu-item-wrapper[data-level="4"] { margin-left: 2rem; }
+
+/* Styles visuels sur la carte */
+.menu-item-level-0 { border-left: 4px solid #d4845a; background: #fff; }
+.menu-item-level-1 { border-left: 3px solid #9d38da; background: #fdfbff; }
+.menu-item-level-2 { border-left: 3px solid #fd82bb; background: #fff5f9; }
+.menu-item-level-3 { border-left: 2px solid #6b647a; background: #f8f9fa; }
+.menu-item-level-4 { border-left: 2px solid #adb5bd; background: #f1f3f5; }
+
+.menu-item-card { border: 1px solid #e9ecef; border-radius: 0 0.5rem 0.5rem 0; padding: 0.5rem; transition: box-shadow 0.2s; }
+.menu-item-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+
+.menu-item-row { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.menu-item-label { flex: 1 1 180px; min-width: 140px; padding: 0.4rem 0.6rem; border: 1px solid #dee2e6; border-radius: 0.375rem; font-size: 0.9rem; }
+.menu-item-label:focus { border-color: #d4845a; outline: none; box-shadow: 0 0 0 2px rgba(212,132,90,0.2); }
+.menu-item-url { flex: 1 1 200px; min-width: 160px; padding: 0.4rem 0.6rem; border: 1px solid #dee2e6; border-radius: 0.375rem; font-size: 0.85rem; color: #6b647a; font-family: monospace; }
+.menu-item-url:focus { border-color: #d4845a; outline: none; box-shadow: 0 0 0 2px rgba(212,132,90,0.2); }
+.menu-item-actions { display: flex; gap: 0.25rem; flex-shrink: 0; }
+.menu-item-children { margin-top: 0.25rem; }
+.btn-admin-sm { padding: 0.25rem 0.5rem; font-size: 0.8rem; line-height: 1.2; }
+.btn-admin-danger { background: #dc3545; color: #fff; border-color: #dc3545; }
+.btn-admin-danger:hover { background: #c82333; border-color: #bd2130; }
+.admin-mb-3 { margin-bottom: 1rem; }
+
+/* Bouton sous-menu désactivé au niveau max */
+.btn-add-submenu-disabled { opacity: 0.3; cursor: not-allowed; pointer-events: none; }
+</style>
+{% endblock %}

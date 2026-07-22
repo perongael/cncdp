@@ -1,0 +1,126 @@
+{% extends 'admin/base_admin.html.twig' %}
+
+{% block title %}Tableau de bord — Administration CNCDP{% endblock %}
+
+{% block admin_body %}
+    <div class="admin-page-header">
+        <p class="breadcrumb">
+            <a href="{{ path('admin_dashboard') }}">Administration</a> &rsaquo; Tableau de bord
+        </p>
+        <h1>Tableau de bord</h1>
+    </div>
+
+    <div class="admin-content">
+        {# Cartes statistiques #}
+        <div class="admin-cards admin-mb-4">
+            <div class="admin-stat-card">
+                <div class="stat-icon violet">
+                    <i class="fa-solid fa-file-lines" aria-hidden="true"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>5</h3>
+                    <p>Pages du site</p>
+                </div>
+            </div>
+            <div class="admin-stat-card">
+                <div class="stat-icon rose">
+                    <i class="fa-solid fa-building" aria-hidden="true"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>6</h3>
+                    <p>Organisations adhérentes</p>
+                </div>
+            </div>
+            <div class="admin-stat-card">
+                <div class="stat-icon orange">
+                    <i class="fa-solid fa-scale-balanced" aria-hidden="true"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>0</h3>
+                    <p>Avis publiés</p>
+                </div>
+            </div>
+            <div class="admin-stat-card">
+                <div class="stat-icon violet">
+                    <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>—</h3>
+                    <p>Visites cette semaine</p>
+                </div>
+            </div>
+        </div>
+
+        {# Actions rapides #}
+        <div class="admin-grid">
+            <div class="admin-card">
+                <div class="admin-card-header">
+                    <h2><i class="fa-solid fa-bolt" aria-hidden="true"></i> Actions rapides</h2>
+                </div>
+                <div class="admin-card-body">
+                    <ul class="admin-list">
+                        <li>
+                            <div>
+                                <span class="item-title">Modifier la page d'accueil</span>
+                                <br><span class="item-meta">Texte de présentation, boutons, bannière</span>
+                            </div>
+                            <a href="{{ path('admin_homepage') }}" class="btn-admin btn-admin-primary btn-admin-sm">
+                                <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i> Éditer
+                            </a>
+                        </li>
+                        <li>
+                            <div>
+                                <span class="item-title">Gérer les organisations</span>
+                                <br><span class="item-meta">Ajouter ou modifier les logos et noms</span>
+                            </div>
+                            <a href="{{ path('admin_organizations') }}" class="btn-admin btn-admin-outline btn-admin-sm">
+                                <i class="fa-solid fa-building" aria-hidden="true"></i> Gérer
+                            </a>
+                        </li>
+                        <li>
+                            <div>
+                                <span class="item-title">Personnaliser l'apparence</span>
+                                <br><span class="item-meta">Couleurs, polices, logo</span>
+                            </div>
+                            <a href="{{ path('admin_appearance') }}" class="btn-admin btn-admin-outline btn-admin-sm">
+                                <i class="fa-solid fa-palette" aria-hidden="true"></i> Modifier
+                            </a>
+                        </li>
+                        <li>
+                            <div>
+                                <span class="item-title">Voir le site public</span>
+                                <br><span class="item-meta">Ouvrir le front-office dans un nouvel onglet</span>
+                            </div>
+                            <a href="{{ path('app_home') }}" target="_blank" rel="noopener" class="btn-admin btn-admin-outline btn-admin-sm">
+                                <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i> Voir
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="admin-card">
+                <div class="admin-card-header">
+                    <h2><i class="fa-solid fa-circle-info" aria-hidden="true"></i> Guide rapide</h2>
+                </div>
+                <div class="admin-card-body">
+                    <p>
+                        <strong>Bienvenue dans le back-office du CNCDP !</strong>
+                    </p>
+                    <p>
+                        Utilisez le menu de gauche pour naviguer entre les différentes sections
+                        du site que vous pouvez modifier.
+                    </p>
+                    <p><i class="fa-solid fa-file-lines" aria-hidden="true"></i> <strong>Pages :</strong> gérez le contenu des pages du site.</p>
+                    <p><i class="fa-solid fa-house" aria-hidden="true"></i> <strong>Page d'accueil :</strong> modifiez la bannière, le texte de présentation et les boutons de la page d'accueil.</p>
+                    <p><i class="fa-solid fa-building" aria-hidden="true"></i> <strong>Organisations :</strong> ajoutez ou retirez des organisations adhérentes et leurs logos.</p>
+                    <p><i class="fa-solid fa-palette" aria-hidden="true"></i> <strong>Apparence :</strong> personnalisez les couleurs et la typographie du site.</p>
+                    <p class="admin-mb-0 admin-text-muted">
+                        <i class="fa-solid fa-lightbulb" aria-hidden="true"></i>
+                        <em>Astuce : toutes les modifications sont visibles immédiatement sur le site public.</em>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

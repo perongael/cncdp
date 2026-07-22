@@ -1,0 +1,515 @@
+{% extends 'admin/base_admin.html.twig' %}
+
+{% block title %}
+    {% if is_new %}Nouvelle page{% else %}Modifier « {{ page.title }} »{% endif %} — Administration CNCDP
+{% endblock %}
+
+{% block admin_body %}
+    <div class="admin-page-header">
+        <p class="breadcrumb">
+            <a href="{{ path('admin_dashboard') }}">Administration</a> &rsaquo;
+            <a href="{{ path('admin_pages_list') }}">Pages</a> &rsaquo;
+            {% if is_new %}Nouvelle page{% else %}{{ page.title }}{% endif %}
+        </p>
+        <h1>{% if is_new %}Créer une nouvelle page{% else %}Modifier « {{ page.title }} »{% endif %}</h1>
+    </div>
+
+    <form method="post" id="page-form">
+        {# Bloc Informations de la page #}
+        <div class="admin-content">
+            <div class="admin-card admin-mb-4">
+                <div class="admin-card-header">
+                    <h2><i class="fa-solid fa-info-circle" aria-hidden="true"></i> Informations de la page</h2>
+                </div>
+                <div class="admin-card-body">
+                    <div class="admin-form-group">
+                        <div class="admin-d-flex" style="gap:1rem;">
+                            <div style="flex:1;">
+                                <label for="page-title"><strong>Titre</strong> <span style="color:#c62828;">*</span></label>
+                                <input type="text" id="page-title" name="title" class="admin-form-control"
+                                       value="{{ page.title }}" placeholder="Ex: Code de déontologie"
+                                       required style="font-size:1.1rem;">
+                            </div>
+                            <div style="flex:1;">
+                                <label for="page-slug"><strong>Adresse</strong></label>
+                                <div class="admin-d-flex" style="align-items:center;gap:0.25rem;">
+                                    <span style="color:#6b647a;">/</span>
+                                    <input type="text" id="page-slug" name="slug" class="admin-form-control"
+                                           value="{{ page.slug }}" placeholder="code-de-deontologie"
+                                           style="font-family:monospace;">
+                                </div>
+                            </div>
+                        </div>
+                        <p class="form-hint" style="color:#6b647a;font-size:0.8rem;margin-top:0.25rem;">L'adresse est générée automatiquement depuis le titre. Modifiable manuellement.</p>
+                    </div>
+
+                    <div class="admin-form-group admin-mb-0">
+                        <label><strong>Statut</strong></label>
+                        <div class="admin-d-flex" style="gap:1rem;">
+                            <label style="cursor:pointer;">
+                                <input type="radio" name="status" value="draft" {{ page.status == 'draft' ? 'checked' : '' }}>
+                                <span class="admin-badge admin-badge-warning">Brouillon</span>
+                            </label>
+                            <label style="cursor:pointer;">
+                                <input type="radio" name="status" value="published" {{ page.status == 'published' ? 'checked' : '' }}>
+                                <span class="admin-badge admin-badge-success">Publié</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# Bloc Contenu #}
+            <div class="admin-card admin-mb-4">
+                <div class="admin-card-header">
+                    <h2><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i> Contenu</h2>
+                </div>
+                <div class="admin-card-body">
+                    <p style="margin-bottom:1rem;">
+                        {% if page.htmlContent %}
+                            <i class="fa-solid fa-circle-check" style="color:#2e7d32;"></i>
+                            <span style="color:#2e7d32;">Contenu enregistré</span>
+                        {% else %}
+                            <i class="fa-solid fa-circle" style="color:#adb5bd;"></i>
+                            <span style="color:#6b647a;">Aucun contenu pour le moment.</span>
+                        {% endif %}
+                    </p>
+                    <button type="button" id="open-editor-btn" class="btn-admin btn-admin-primary" style="padding:0.75rem 1.5rem;font-size:1rem;">
+                        <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i> Modifier le contenu avec l'éditeur visuel
+                    </button>
+                </div>
+            </div>
+
+            {# Champs cachés pour le contenu #}
+            <input type="hidden" name="html_content" id="html-content" value="{{ page.htmlContent|e('html_attr') }}">
+            <input type="hidden" name="grapesjs_data" id="grapesjs-data" value="{{ page.grapesjsData|e('html_attr') }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('page_save') }}">
+        </div>
+
+        {# Barre d'actions #}
+        <div class="admin-content" style="padding-top:1rem;padding-bottom:1rem;">
+            <div class="admin-d-flex admin-flex-wrap admin-justify-between">
+                <div class="admin-d-flex">
+                    <button type="submit" name="_save" value="1" class="btn-admin btn-admin-primary">
+                        <i class="fa-solid fa-check" aria-hidden="true"></i> Enregistrer
+                    </button>
+                </div>
+                <a href="{{ path('admin_pages_list') }}" class="btn-admin btn-admin-outline">
+                    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Retour aux pages
+                </a>
+            </div>
+        </div>
+    </form>
+
+    {# Overlay éditeur GrapesJS (plein écran) — Interface inspirée de Studio SDK #}
+    <div id="editor-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;background:#f5f3f0;font-family:Inter,system-ui,-apple-system,sans-serif;">
+        {# === Barre d'outils supérieure (façon Studio SDK) === #}
+        <div id="editor-topbar" style="display:flex;align-items:center;height:44px;padding:0 8px;background:#ffffff;border-bottom:1px solid #e5e0d8;gap:4px;user-select:none;">
+            {# Panels toggle — gauche #}
+            <div style="display:flex;align-items:center;gap:2px;">
+                <button type="button" id="tb-blocks" data-panel="views" data-btn="open-blocks" title="Blocs (composants à glisser)" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border:none;background:transparent;border-radius:6px;cursor:pointer;font-size:1.1rem;color:#78716c;transition:all 0.15s;" onmouseover="this.style.background='#f5f3f0';this.style.color='#44403c'" onmouseout="if(!this.classList.contains('active')){this.style.background='transparent';this.style.color='#78716c'}">🧩</button>
+                <button type="button" id="tb-layers" data-panel="views" data-btn="open-layers" title="Pages &amp; Calques" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border:none;background:transparent;border-radius:6px;cursor:pointer;font-size:1.1rem;color:#78716c;transition:all 0.15s;" onmouseover="this.style.background='#f5f3f0';this.style.color='#44403c'" onmouseout="if(!this.classList.contains('active')){this.style.background='transparent';this.style.color='#78716c'}">📑</button>
+                <button type="button" id="tb-styles" data-panel="views" data-btn="open-sm" title="Styles (couleurs, marges, typos)" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border:none;background:transparent;border-radius:6px;cursor:pointer;font-size:1.1rem;color:#78716c;transition:all 0.15s;" onmouseover="this.style.background='#f5f3f0';this.style.color='#44403c'" onmouseout="if(!this.classList.contains('active')){this.style.background='transparent';this.style.color='#78716c'}">🎨</button>
+                <button type="button" id="tb-traits" data-panel="views" data-btn="open-tm" title="Propriétés du composant" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border:none;background:transparent;border-radius:6px;cursor:pointer;font-size:1.1rem;color:#78716c;transition:all 0.15s;" onmouseover="this.style.background='#f5f3f0';this.style.color='#44403c'" onmouseout="if(!this.classList.contains('active')){this.style.background='transparent';this.style.color='#78716c'}">⚙️</button>
+            </div>
+
+            {# Séparateur #}
+            <div style="width:1px;height:24px;background:#e5e0d8;margin:0 6px;"></div>
+
+            {# Titre + info page — centre #}
+            <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;min-width:0;">
+                <span style="font-weight:600;font-size:0.85rem;color:#44403c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">🎨 {{ page.title ?: 'Nouvelle page' }}</span>
+            </div>
+
+            {# Séparateur #}
+            <div style="width:1px;height:24px;background:#e5e0d8;margin:0 6px;"></div>
+
+            {# Actions — droite #}
+            <div style="display:flex;align-items:center;gap:2px;">
+                {# Device switcher — géré par GrapesJS, masqué ici, rendu visible dans l'iframe #}
+                <div id="editor-device-switcher" style="display:flex;align-items:center;gap:1px;margin-right:4px;"></div>
+
+                {# Undo / Redo #}
+                <button type="button" id="tb-undo" title="Annuler (Ctrl+Z)" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border:none;background:transparent;border-radius:6px;cursor:pointer;font-size:1.1rem;color:#78716c;transition:all 0.15s;" onmouseover="this.style.background='#f5f3f0';this.style.color='#44403c'" onmouseout="this.style.background='transparent';this.style.color='#78716c'">↩️</button>
+                <button type="button" id="tb-redo" title="Rétablir (Ctrl+Y)" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border:none;background:transparent;border-radius:6px;cursor:pointer;font-size:1.1rem;color:#78716c;transition:all 0.15s;" onmouseover="this.style.background='#f5f3f0';this.style.color='#44403c'" onmouseout="this.style.background='transparent';this.style.color='#78716c'">↪️</button>
+
+                {# Séparateur #}
+                <div style="width:1px;height:24px;background:#e5e0d8;margin:0 4px;"></div>
+
+                {# Contours des blocs #}
+                <button type="button" id="tb-outline" title="Afficher les contours des blocs" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border:none;background:transparent;border-radius:6px;cursor:pointer;font-size:1.1rem;color:#78716c;transition:all 0.15s;" onmouseover="this.style.background='#f5f3f0';this.style.color='#44403c'" onmouseout="if(!this.classList.contains('active')){this.style.background='transparent';this.style.color='#78716c'}">🔲</button>
+
+                {# Séparateur #}
+                <div style="width:1px;height:24px;background:#e5e0d8;margin:0 4px;"></div>
+                <div style="width:1px;height:24px;background:#e5e0d8;margin:0 4px;"></div>
+
+                {# Aperçu / Code export #}
+                <button type="button" id="tb-preview" title="Aperçu (mode prévisualisation)" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border:none;background:transparent;border-radius:6px;cursor:pointer;font-size:1.1rem;color:#78716c;transition:all 0.15s;" onmouseover="this.style.background='#f5f3f0';this.style.color='#44403c'" onmouseout="this.style.background='transparent';this.style.color='#78716c'">👁️</button>
+                <button type="button" id="tb-code" title="Voir le code HTML" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border:none;background:transparent;border-radius:6px;cursor:pointer;font-size:1.1rem;color:#78716c;transition:all 0.15s;" onmouseover="this.style.background='#f5f3f0';this.style.color='#44403c'" onmouseout="this.style.background='transparent';this.style.color='#78716c'">📋</button>
+                <button type="button" id="tb-gallery" title="Galerie de templates" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border:none;background:transparent;border-radius:6px;cursor:pointer;font-size:1.1rem;color:#78716c;transition:all 0.15s;" onmouseover="this.style.background='#f5f3f0';this.style.color='#44403c'" onmouseout="this.style.background='transparent';this.style.color='#78716c'">🖼️</button>
+                <button type="button" id="tb-clear" title="Vider le canvas (tout supprimer)" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border:none;background:transparent;border-radius:6px;cursor:pointer;font-size:1.1rem;color:#78716c;transition:all 0.15s;" onmouseover="this.style.background='#fef2f2';this.style.color='#ef4444'" onmouseout="this.style.background='transparent';this.style.color='#78716c'">🗑️</button>
+
+                {# Séparateur #}
+                <div style="width:1px;height:24px;background:#e5e0d8;margin:0 4px;"></div>
+
+                {# Sauvegarde / Actions finales #}
+                <button type="button" id="editor-save-progress-btn" title="Sauvegarder sans fermer" style="display:inline-flex;align-items:center;gap:4px;padding:0 12px;height:30px;border:1px solid #d4845a;background:transparent;color:#d4845a;border-radius:6px;cursor:pointer;font-size:0.8rem;font-weight:600;transition:all 0.15s;white-space:nowrap;" onmouseover="this.style.background='#d4845a';this.style.color='#fff'" onmouseout="this.style.background='transparent';this.style.color='#d4845a'">💾 Enreg.</button>
+                <button type="button" id="editor-save-btn" title="Sauvegarder et fermer l'éditeur" style="display:inline-flex;align-items:center;gap:4px;padding:0 12px;height:30px;border:none;background:#d4845a;color:#fff;border-radius:6px;cursor:pointer;font-size:0.8rem;font-weight:600;transition:all 0.15s;white-space:nowrap;box-shadow:0 1px 3px rgba(212,132,90,0.3);" onmouseover="this.style.background='#c7784e'" onmouseout="this.style.background='#d4845a'">✓ Terminer</button>
+                <button type="button" id="editor-close-btn" title="Fermer sans enregistrer" style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border:none;background:transparent;border-radius:6px;cursor:pointer;font-size:1.2rem;color:#78716c;transition:all 0.15s;margin-left:2px;" onmouseover="this.style.background='#f5f3f0';this.style.color='#ef4444'" onmouseout="this.style.background='transparent';this.style.color='#78716c'">✕</button>
+            </div>
+        </div>
+
+        {# === Zone de travail (canvas GrapesJS) === #}
+        <div id="gjs" style="height:calc(100% - 44px - 28px);position:relative;" data-cncdp-css="{{ asset('styles/cncdp.css') }}" data-page-id="{{ page.id ?: 'new' }}"></div>
+
+        {# === Barre d'état inférieure (façon Studio SDK) === #}
+        <div id="editor-statusbar" style="display:flex;align-items:center;height:28px;padding:0 12px;background:#ffffff;border-top:1px solid #e5e0d8;font-size:0.75rem;color:#a8a29e;gap:16px;user-select:none;">
+            <span id="statusbar-component">Aucun élément sélectionné</span>
+            <span style="flex:1;"></span>
+            <span id="statusbar-saved">💾 Prêt</span>
+        </div>
+    </div>
+
+    {# === Thème GrapesJS CNCDP (statique, remplace applyBlockStyles/setInterval) === #}
+    <style>
+        /* Panneaux latéraux */
+        .gjs-one-bg { background-color: #2d2540 !important; }
+        .gjs-pn-views, .gjs-pn-panels { background-color: #2d2540 !important; }
+        .gjs-pn-views .gjs-pn-buttons { background-color: #372e4a !important; }
+        .gjs-two-color { color: #c4bdd4 !important; }
+
+        /* Blocs : grille 2 colonnes, fond sombre, bordures terracotta */
+        .gjs-block-category.gjs-open .gjs-blocks-c {
+            display: flex !important; flex-wrap: wrap !important; gap: 6px !important; padding: 6px 8px !important;
+        }
+        .gjs-block {
+            width: calc(50% - 3px) !important; min-width: 0 !important; max-width: none !important;
+            border-radius: 8px !important; padding: 6px 4px 5px !important; margin: 0 !important;
+            border: 1px solid rgba(212,132,90,0.25) !important; background: #372e4a !important;
+            box-shadow: none !important; display: flex !important; flex-direction: column !important;
+            align-items: center !important; justify-content: flex-start !important;
+            text-align: center !important; min-height: auto !important; height: auto !important;
+            flex-shrink: 0 !important;
+        }
+        .gjs-block:hover { border-color: #d4845a !important; background: #443a58 !important; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(212,132,90,0.25); }
+        .gjs-block__media { width: 100% !important; height: 40px !important; min-height: 40px !important; max-height: 40px !important; display: flex !important; align-items: center !important; justify-content: center !important; margin-bottom: 3px !important; font-size: 1.5rem !important; flex-shrink: 0 !important; }
+        .gjs-block__media svg { width: 24px !important; height: 24px !important; min-width: 24px !important; max-width: 24px !important; min-height: 24px !important; max-height: 24px !important; color: #d4845a !important; }
+        .gjs-block-label { font-size: 0.65rem !important; font-weight: 500 !important; color: #c4bdd4 !important; line-height: 1.15 !important; max-width: 100% !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; padding: 0 2px !important; }
+        .gjs-block-category .gjs-title { font-weight: 600 !important; font-size: 0.72rem !important; text-transform: uppercase !important; letter-spacing: 0.8px !important; padding: 0.5rem 10px 0.35rem !important; color: #8b7fa8 !important; background: transparent !important; }
+    </style>
+    </div>
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/grapesjs@0.23.2/dist/css/grapes.min.css">
+    <style>
+        /* === Thème CNCDP — Interface inspirée Studio SDK (fond sombre sidebar) === */
+        :root {
+            --gjs-primary-color: #2d2540;
+            --gjs-secondary-color: rgba(196,189,212,0.9);
+            --gjs-tertiary-color: #372e4a;
+            --gjs-quaternary-color: #d4845a;
+        }
+        /* Panneaux latéraux — fond sombre comme la sidebar admin */
+        .gjs-one-bg { background-color: #2d2540 !important; }
+        .gjs-two-color { color: #c4bdd4 !important; }
+        .gjs-three-bg { background-color: #372e4a !important; }
+        .gjs-four-color,
+        .gjs-four-color-h:hover { color: #d4845a !important; }
+
+        /* Barre des boutons de navigation des panneaux */
+        .gjs-pn-buttons { background-color: #372e4a !important; }
+        /* Canvas — fond propre */
+        .gjs-cv-canvas { background-color: #e8e4dd; }
+        #gjs { border: none; height: calc(100% - 44px - 28px) !important; }
+        .gjs-editor { display: flex !important; flex-direction: row !important; height: 100% !important; }
+        .gjs-pn-views-container { overflow-y: auto !important; }
+        .gjs-cv-canvas { flex: 1 !important; }
+
+        /* Panneaux — scroll interne uniquement pour les longues listes de blocs */
+        .gjs-pn-panel { font-size: 0.85rem; }
+        .gjs-pn-views { overflow-y: auto !important; }
+        .gjs-pn-views.gjs-pn-panel { border-right: 1px solid rgba(255,255,255,0.06); }
+        .gjs-pn-panel.gjs-pn-options { border-bottom: 1px solid rgba(255,255,255,0.06); }
+        .gjs-pn-panel.gjs-pn-devices-c { border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+        /* Boutons panels — style Studio */
+        .gjs-pn-btn {
+            border-radius: 6px;
+            transition: all 0.15s ease;
+            color: #c4bdd4;
+        }
+        .gjs-pn-btn:hover { background: rgba(255,255,255,0.08); color: #e0d8f0; }
+        .gjs-pn-btn.gjs-pn-active {
+            background: rgba(212,132,90,0.12);
+            color: #d4845a;
+            box-shadow: inset 0 0 0 1px rgba(212,132,90,0.3);
+            border-radius: 6px;
+        }
+
+        /* Bouton actif dans notre topbar */
+        #editor-topbar button.active {
+            background: rgba(212,132,90,0.12) !important;
+            color: #d4845a !important;
+            box-shadow: inset 0 0 0 1px rgba(212,132,90,0.25);
+        }
+
+        /* Masquer la topbar native de GrapesJS (on a la nôtre) */
+        .gjs-pn-options { display: none !important; }
+        .gjs-pn-commands { display: none !important; }
+
+        /* Masquer la section "Classes CSS" du gestionnaire de styles */
+        .gjs-clm-tags { display: none !important; }
+        .gjs-clm-sels-info { display: none !important; }
+        .gjs-clm-sels { display: none !important; }
+
+        /* Panneau des blocs — largeur augmentée pour la grille 2 colonnes, scroll si nécessaire */
+        .gjs-pn-views { min-width: 220px !important; width: 240px !important; overflow-y: auto !important; }
+        .gjs-pn-views .gjs-pn-buttons { flex-shrink: 0; }
+
+        /* === Blocs — présentation compacte façon Studio SDK (fond sombre) === */
+        .gjs-pn-views .gjs-block-category.gjs-open .gjs-blocks-c {
+            display: flex !important;
+            flex-wrap: wrap !important;
+            gap: 6px !important;
+            padding: 6px 8px !important;
+        }
+        .gjs-pn-views .gjs-blocks-c .gjs-block {
+            width: calc(50% - 3px) !important;
+            min-width: 0 !important;
+            max-width: none !important;
+            border-radius: 8px !important;
+            padding: 6px 4px 5px !important;
+            margin: 0 !important;
+            transition: all 0.18s ease !important;
+            border: 1px solid rgba(212,132,90,0.25) !important;
+            background: #372e4a !important;
+            box-shadow: none !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            text-align: center !important;
+            min-height: auto !important;
+            height: auto !important;
+            flex-shrink: 0 !important;
+        }
+        .gjs-pn-views .gjs-blocks-c .gjs-block:hover {
+            border-color: #d4845a !important;
+            background: #443a58 !important;
+            transform: translateY(-1px) !important;
+            box-shadow: 0 4px 12px rgba(212,132,90,0.25) !important;
+        }
+        .gjs-pn-views .gjs-block__media {
+            width: 100% !important;
+            height: 40px !important;
+            min-height: 40px !important;
+            max-height: 40px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            margin-bottom: 3px !important;
+            font-size: 1.5rem !important;
+            flex-shrink: 0 !important;
+        }
+        .gjs-pn-views .gjs-block__media svg {
+            width: 24px !important;
+            height: 24px !important;
+            min-width: 24px !important;
+            max-width: 24px !important;
+            min-height: 24px !important;
+            max-height: 24px !important;
+            color: #d4845a !important;
+        }
+        .gjs-pn-views .gjs-block__media .fa {
+            font-size: 1.1rem !important;
+        }
+        .gjs-pn-views .gjs-block-label {
+            font-size: 0.65rem !important;
+            font-weight: 500 !important;
+            color: #c4bdd4 !important;
+            line-height: 1.15 !important;
+            max-width: 100% !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+            padding: 0 2px !important;
+        }
+
+        /* Catégories de blocs */
+        .gjs-pn-views .gjs-block-category {
+            margin-bottom: 4px !important;
+        }
+        .gjs-pn-views .gjs-block-category .gjs-title {
+            font-weight: 600 !important;
+            font-size: 0.72rem !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.8px !important;
+            padding: 0.5rem 10px 0.35rem !important;
+            color: #8b7fa8 !important;
+            background: transparent !important;
+        }
+        .gjs-pn-views .gjs-block-category.gjs-open .gjs-title {
+            color: #b8aed4 !important;
+        }
+
+        /* Champs */
+        .gjs-field { border-radius: 6px; }
+        .gjs-field input, .gjs-field select, .gjs-field textarea {
+            font-size: 0.82rem;
+            padding: 0.4rem 0.5rem;
+            border-radius: 4px;
+            border-color: #e5e0d8;
+        }
+        .gjs-field input:focus, .gjs-field select:focus {
+            border-color: #d4845a;
+            box-shadow: 0 0 0 2px rgba(212,132,90,0.15);
+            outline: none;
+        }
+
+        /* Labels traits */
+        .gjs-trt-trait .gjs-label {
+            font-weight: 500;
+            font-size: 0.78rem;
+            color: #78716c;
+        }
+
+        /* Toolbar composant */
+        .gjs-toolbar {
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+        .gjs-toolbar-item {
+            border-radius: 6px;
+            transition: all 0.15s;
+        }
+        .gjs-toolbar-item:hover {
+            background: rgba(212,132,90,0.12);
+            color: #d4845a;
+        }
+
+        /* Toast */
+        #editor-toast {
+            background: #44403c;
+            color: #faf9f7;
+            font-weight: 600;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+        }
+
+        /* === RTE (barre d'outils d'édition de texte) === */
+        .gjs-rte-toolbar {
+            display: flex !important;
+            flex-wrap: wrap;
+            gap: 2px;
+            padding: 4px 6px !important;
+            background: #ffffff !important;
+            border: 1px solid #e5e0d8 !important;
+            border-radius: 10px !important;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;
+            z-index: 10000 !important;
+        }
+        .gjs-rte-toolbar .gjs-rte-action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 30px;
+            height: 28px;
+            padding: 0 6px;
+            border: none;
+            background: transparent;
+            color: #78716c;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+        .gjs-rte-toolbar .gjs-rte-action:hover {
+            background: #f0ede8;
+            color: #44403c;
+        }
+        .gjs-rte-toolbar .gjs-rte-action.gjs-rte-active {
+            background: rgba(212,132,90,0.15);
+            color: #d4845a;
+        }
+        .gjs-rte-toolbar .gjs-rte-separator {
+            width: 1px;
+            height: 22px;
+            background: #e5e0d8;
+            margin: 3px 4px;
+        }
+        /* Sélecteurs RTE custom */
+        select.cncdp-rte-custom {
+            height: 28px;
+            padding: 0 4px;
+            background: #faf9f7;
+            color: #44403c;
+            border: 1px solid #e5e0d8;
+            border-radius: 5px;
+            font-size: 0.78rem;
+            font-weight: 500;
+            cursor: pointer;
+            outline: none;
+            max-width: 110px;
+        }
+        select.cncdp-rte-custom:hover { background: #f0ede8; border-color: #d4845a; }
+        select.cncdp-rte-custom:focus { border-color: #d4845a; box-shadow: 0 0 0 2px rgba(212,132,90,0.15); }
+        select.cncdp-rte-custom option { background: #fff; color: #44403c; }
+        select.cncdp-rte-font { min-width: 90px; }
+        select.cncdp-rte-size { min-width: 60px; }
+        input.cncdp-rte-custom[type="color"] {
+            width: 28px; height: 28px; padding: 2px;
+            background: transparent; border: 1px solid #e5e0d8;
+            border-radius: 5px; cursor: pointer; outline: none;
+        }
+        input.cncdp-rte-custom[type="color"]:hover { border-color: #d4845a; }
+        input.cncdp-rte-custom[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+        input.cncdp-rte-custom[type="color"]::-webkit-color-swatch { border: none; border-radius: 3px; }
+
+        /* === Badges dans l'éditeur === */
+        .gjs-badge { border-radius: 4px; font-size: 0.7rem; }
+        .gjs-badge__name { font-weight: 500; }
+
+        /* === Scrollbar discrète === */
+        .gjs-pn-panels::-webkit-scrollbar { width: 6px; }
+        .gjs-pn-panels::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 3px; }
+        .gjs-pn-panels::-webkit-scrollbar-track { background: transparent; }
+
+        /* === RTE Toolbar — positionnement au-dessus du texte === */
+        .gjs-rte-toolbar {
+            transform: translateY(calc(-100% - 8px)) !important;
+        }
+        /* Curseur d'édition bien visible */
+        .gjs-selected[contenteditable="true"],
+        [data-gjs-type="text"][contenteditable="true"] {
+            caret-color: #d4845a !important;
+            outline: 2px solid rgba(212,132,90,0.4) !important;
+            outline-offset: 2px;
+        }
+    </style>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://cdn.jsdelivr.net/npm/grapesjs@0.23.2/dist/grapes.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/grapesjs-blocks-basic@1.0.2/dist/index.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/grapesjs-preset-webpage@1.0.2/dist/index.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/grapesjs-blocks-bootstrap4@0.2.5/dist/grapesjs-blocks-bootstrap4.min.js"></script>
+    <script src="https://uicdn.toast.com/tui.code-snippet/v1.5.2/tui-code-snippet.min.js"></script>
+    <script src="https://uicdn.toast.com/tui-color-picker/v2.2.7/tui-color-picker.min.js"></script>
+    <script src="https://uicdn.toast.com/tui-image-editor/v3.15.3/tui-image-editor.min.js"></script>
+    <link rel="stylesheet" href="https://uicdn.toast.com/tui-color-picker/v2.2.7/tui-color-picker.css">
+    <link rel="stylesheet" href="https://uicdn.toast.com/tui-image-editor/v3.15.3/tui-image-editor.css">
+    {# === Plugins additionnels (session [PLUGINS] 18/07/2026) === #}
+    <script src="https://unpkg.com/grapesjs-indexeddb"></script>
+    <script src="https://unpkg.com/grapesjs-plugin-forms"></script>
+    <script src="https://unpkg.com/grapesjs-tui-image-editor"></script>
+    <script src="https://unpkg.com/grapesjs-custom-code"></script>
+    <script src="https://unpkg.com/grapesjs-blocks-flexbox"></script>
+    {# ============================================================= #}
+    <script src="{{ asset('page-editor.js') }}"></script>
+    <script src="{{ asset('template-homepage.js') }}"></script>
+{% endblock %}
+

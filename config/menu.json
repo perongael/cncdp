@@ -1,0 +1,46 @@
+{
+    "items": [
+        {
+            "id": "accueil",
+            "label": "Accueil",
+            "url": "/",
+            "children": []
+        },
+        {
+            "id": "le-cncdp",
+            "label": "Le CNCDP",
+            "url": "/le-cncdp",
+            "children": []
+        },
+        {
+            "id": "m_1784559219095_6lyzxr",
+            "label": "Adhésion",
+            "url": "/adhesion-cncdp",
+            "children": []
+        },
+        {
+            "id": "m_1784635101120_yzjfhb",
+            "label": "Avis consultatifs",
+            "url": "demande-avis-consultatifs",
+            "children": []
+        },
+        {
+            "id": "m_1784635130909_zl7ms1",
+            "label": "Journées d'études",
+            "url": "/journees-detudes",
+            "children": []
+        },
+        {
+            "id": "formations",
+            "label": "Formations",
+            "url": "/formations",
+            "children": []
+        },
+        {
+            "id": "contact",
+            "label": "Contact",
+            "url": "/contact",
+            "children": []
+        }
+    ]
+}

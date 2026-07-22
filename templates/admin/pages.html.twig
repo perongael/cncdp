@@ -1,0 +1,82 @@
+{% extends 'admin/base_admin.html.twig' %}
+
+{% block title %}Pages — Administration CNCDP{% endblock %}
+
+{% block admin_body %}
+    <div class="admin-page-header">
+        <p class="breadcrumb">
+            <a href="{{ path('admin_dashboard') }}">Administration</a> &rsaquo; Pages
+        </p>
+        <h1>Gérer les pages du site</h1>
+    </div>
+
+    <div class="admin-content">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h2><i class="fa-solid fa-list" aria-hidden="true"></i> Toutes les pages</h2>
+                <button class="btn-admin btn-admin-primary btn-admin-sm">
+                    <i class="fa-solid fa-plus" aria-hidden="true"></i> Nouvelle page
+                </button>
+            </div>
+            <div class="admin-card-body" style="overflow-x:auto;">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Titre</th>
+                            <th>URL</th>
+                            <th>Dernière modification</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Accueil</strong></td>
+                            <td><code>/</code></td>
+                            <td>Aujourd'hui</td>
+                            <td><span class="admin-badge admin-badge-success">Publié</span></td>
+                            <td>
+                                <a href="{{ path('admin_homepage') }}" class="btn-admin btn-admin-outline btn-admin-sm">
+                                    <i class="fa-solid fa-pen" aria-hidden="true"></i> Éditer
+                                </a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Le CNCDP</strong></td>
+                            <td><code>/le-cncdp</code></td>
+                            <td>—</td>
+                            <td><span class="admin-badge admin-badge-warning">Brouillon</span></td>
+                            <td>
+                                <button class="btn-admin btn-admin-outline btn-admin-sm">
+                                    <i class="fa-solid fa-pen" aria-hidden="true"></i> Éditer
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Code de déontologie</strong></td>
+                            <td><code>/code-deontologie</code></td>
+                            <td>—</td>
+                            <td><span class="admin-badge admin-badge-warning">Brouillon</span></td>
+                            <td>
+                                <button class="btn-admin btn-admin-outline btn-admin-sm">
+                                    <i class="fa-solid fa-pen" aria-hidden="true"></i> Éditer
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Contact</strong></td>
+                            <td><code>/contact</code></td>
+                            <td>—</td>
+                            <td><span class="admin-badge admin-badge-warning">Brouillon</span></td>
+                            <td>
+                                <button class="btn-admin btn-admin-outline btn-admin-sm">
+                                    <i class="fa-solid fa-pen" aria-hidden="true"></i> Éditer
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}

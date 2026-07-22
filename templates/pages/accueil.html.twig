@@ -1,0 +1,142 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}CNCDP — Comité National Consultatif de Déontologie des Psychologues{% endblock %}
+
+{% block body %}
+    {# ===== HERO BANNER ===== #}
+    <header class="hero" role="banner">
+        <div class="container hero-content">
+            <h1>Comité National Consultatif<br>de Déontologie des Psychologues</h1>
+            <p class="subtitle">
+                Instance indépendante chargée de veiller au respect du Code de déontologie
+                des psychologues en France. Le CNCDP émet des avis consultatifs, promeut
+                la réflexion éthique et accompagne les professionnels dans leur pratique.
+            </p>
+            <a href="#" class="btn btn-primary">
+                <i class="fa-solid fa-book-open" aria-hidden="true"></i>
+                Accéder au Code de déontologie 2021
+            </a>
+        </div>
+    </header>
+
+    {# ===== SECTION PRÉSENTATION ===== #}
+    <section class="section section-white presentation" aria-labelledby="presentation-title">
+        <div class="container">
+            <h2 id="presentation-title">Notre mission</h2>
+            <p>
+                Le CNCDP est une instance consultative indépendante créée par les organisations
+                professionnelles de psychologues. Sa mission principale est de veiller au respect
+                du <strong>Code de déontologie des psychologues</strong>, de promouvoir une culture
+                de l'éthique au sein de la profession et d'accompagner les psychologues comme les
+                usagers dans l'appropriation des règles déontologiques.
+            </p>
+            <p>
+                Le Comité est composé de personnalités qualifiées, reconnues pour leur expertise
+                en matière de déontologie, d'éthique et de droit. Il examine les saisines qui lui
+                sont adressées et rend des avis motivés, publics et accessibles à tous.
+            </p>
+            <div class="btn-group">
+                <a href="#" class="btn btn-outline-violet">
+                    <i class="fa-solid fa-book" aria-hidden="true"></i>
+                    Lire le Code en ligne
+                </a>
+                <a href="#" class="btn btn-orange">
+                    <i class="fa-solid fa-download" aria-hidden="true"></i>
+                    Télécharger le Code 2021 (PDF)
+                </a>
+            </div>
+        </div>
+    </section>
+
+    {# ===== SECTION VALEURS / ACCÈS RAPIDES ===== #}
+    <section class="section section-orange" aria-labelledby="acces-title">
+        <div class="container">
+            <h2 id="acces-title" class="text-center">Accès rapides</h2>
+            <div class="cards-grid mt-xl">
+                {# Carte 1 : Demande d'avis #}
+                <article class="card">
+                    <div class="card-icon" aria-hidden="true">
+                        <i class="fa-solid fa-file-signature"></i>
+                    </div>
+                    <h3>Demande d'avis consultatif</h3>
+                    <p>
+                        Vous êtes psychologue, usager ou organisation et vous souhaitez
+                        saisir le CNCDP pour obtenir un avis sur une question déontologique.
+                    </p>
+                    <a href="#" class="card-link">
+                        Déposer une saisine
+                        <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                    </a>
+                </article>
+
+                {# Carte 2 : Index des avis #}
+                <article class="card">
+                    <div class="card-icon" aria-hidden="true">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </div>
+                    <h3>Index des avis</h3>
+                    <p>
+                        Consultez l'ensemble des avis rendus par le CNCDP depuis sa création.
+                        Une base de référence pour la pratique déontologique.
+                    </p>
+                    <a href="#" class="card-link">
+                        Consulter les avis
+                        <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                    </a>
+                </article>
+
+                {# Carte 3 : Adhésion des organisations #}
+                <article class="card">
+                    <div class="card-icon" aria-hidden="true">
+                        <i class="fa-solid fa-handshake"></i>
+                    </div>
+                    <h3>Adhésion des organisations</h3>
+                    <p>
+                        Découvrez les organisations professionnelles adhérentes au CNCDP
+                        et les modalités pour rejoindre le Comité.
+                    </p>
+                    <a href="#" class="card-link">
+                        En savoir plus
+                        <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                    </a>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    {# ===== SECTION LOGOS / ORGANISATIONS ADHÉRENTES ===== #}
+    <section class="section section-rose text-center" aria-labelledby="logos-title">
+        <div class="container">
+            <h2 id="logos-title">Nos organisations adhérentes</h2>
+            <p class="text-center" style="max-width:40rem;margin-left:auto;margin-right:auto;">
+                Le CNCDP rassemble les principales organisations professionnelles
+                de psychologues en France. Ensemble, elles œuvrent pour la promotion
+                et le respect du Code de déontologie.
+            </p>
+            <div class="logos-grid">
+                <div class="logo-placeholder">FFPP</div>
+                <div class="logo-placeholder">SNP</div>
+                <div class="logo-placeholder">UNCP</div>
+                <div class="logo-placeholder">AEPU</div>
+                <div class="logo-placeholder">ANOP</div>
+                <div class="logo-placeholder">SYNPA</div>
+            </div>
+        </div>
+    </section>
+
+    {# ===== SECTION VIOLET : RAPPEL CODE ===== #}
+    <section class="section section-violet text-center" aria-labelledby="rappel-title">
+        <div class="container">
+            <h2 id="rappel-title">Le Code de déontologie 2021</h2>
+            <p style="max-width:40rem;margin-left:auto;margin-right:auto;">
+                La nouvelle version du Code de déontologie des psychologues est entrée
+                en vigueur en 2021. Elle actualise les principes éthiques fondamentaux
+                qui guident la pratique professionnelle des psychologues en France.
+            </p>
+            <a href="#" class="btn btn-primary mt-lg">
+                <i class="fa-solid fa-download" aria-hidden="true"></i>
+                Télécharger le PDF
+            </a>
+        </div>
+    </section>
+{% endblock %}

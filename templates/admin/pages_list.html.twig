@@ -1,0 +1,93 @@
+{% extends 'admin/base_admin.html.twig' %}
+
+{% block title %}Pages — Administration CNCDP{% endblock %}
+
+{% block admin_body %}
+    <div class="admin-page-header">
+        <p class="breadcrumb">
+            <a href="{{ path('admin_dashboard') }}">Administration</a> &rsaquo; Pages
+        </p>
+        <h1>Gérer les pages du site</h1>
+    </div>
+
+    <div class="admin-content">
+        {% for message in app.flashes('success') %}
+            <div class="admin-alert admin-alert-success" role="alert">
+                <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                {{ message }}
+            </div>
+        {% endfor %}
+        {% for message in app.flashes('error') %}
+            <div class="admin-alert admin-alert-danger" role="alert">
+                <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+                {{ message }}
+            </div>
+        {% endfor %}
+
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h2><i class="fa-solid fa-list" aria-hidden="true"></i> Toutes les pages</h2>
+                <a href="{{ path('admin_page_new') }}" class="btn-admin btn-admin-primary btn-admin-sm">
+                    <i class="fa-solid fa-plus" aria-hidden="true"></i> Nouvelle page
+                </a>
+            </div>
+            <div class="admin-card-body" style="overflow-x:auto;">
+                {% if pages is empty %}
+                    <p class="admin-text-muted" style="text-align:center;padding:2rem 0;">
+                        <i class="fa-solid fa-file-circle-plus" aria-hidden="true" style="font-size:2rem;display:block;margin-bottom:0.5rem;"></i>
+                        Aucune page pour le moment.<br>
+                        <a href="{{ path('admin_page_new') }}">Créer votre première page</a>
+                    </p>
+                {% else %}
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Titre</th>
+                            <th>URL</th>
+                            <th>Dernière modification</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for page in pages %}
+                        <tr>
+                            <td>
+                                <strong>{{ page.title }}</strong>
+                                {% if page.slug == 'accueil' %}
+                                    <span class="admin-badge admin-badge-info" style="font-size:0.7rem;margin-left:0.25rem;">Accueil</span>
+                                {% endif %}
+                            </td>
+                            <td><code>/{{ page.slug }}</code></td>
+                            <td>{{ page.updatedAt|date('d/m/Y H:i') }}</td>
+                            <td>
+                                {% if page.status == 'published' %}
+                                    <span class="admin-badge admin-badge-success">Publié</span>
+                                {% else %}
+                                    <span class="admin-badge admin-badge-warning">Brouillon</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="admin-d-flex">
+                                    <a href="{{ path('admin_page_edit', {id: page.id}) }}" class="btn-admin btn-admin-outline btn-admin-sm">
+                                        <i class="fa-solid fa-pen" aria-hidden="true"></i> Éditer
+                                    </a>
+                                    {% if page.slug != 'accueil' %}
+                                    <form method="post" action="{{ path('admin_page_delete', {id: page.id}) }}" onsubmit="return confirm('Supprimer cette page ?');" style="display:inline;">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete_page_' ~ page.id) }}">
+                                        <button type="submit" class="btn-admin btn-admin-danger btn-admin-sm">
+                                            <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

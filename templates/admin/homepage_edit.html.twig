@@ -1,0 +1,107 @@
+{% extends 'admin/base_admin.html.twig' %}
+
+{% block title %}Modifier la page d'accueil — Administration CNCDP{% endblock %}
+
+{% block admin_body %}
+    <div class="admin-page-header">
+        <p class="breadcrumb">
+            <a href="{{ path('admin_dashboard') }}">Administration</a> &rsaquo; Page d'accueil
+        </p>
+        <h1>Modifier la page d'accueil</h1>
+    </div>
+
+    <div class="admin-content">
+        <div class="admin-alert admin-alert-info" role="status">
+            <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+            <strong>À savoir :</strong> Les modifications ci-dessous seront immédiatement visibles sur la page d'accueil du site. Prenez le temps de vérifier le résultat <a href="{{ path('app_home') }}" target="_blank" rel="noopener">en visualisant le site <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>.
+        </div>
+
+        <form method="post" action="{{ path('admin_homepage') }}">
+            {# Bannière Hero #}
+            <div class="admin-card admin-mb-4">
+                <div class="admin-card-header">
+                    <h2><i class="fa-solid fa-image" aria-hidden="true"></i> Bannière d'accueil (Hero)</h2>
+                </div>
+                <div class="admin-card-body">
+                    <div class="admin-form-group">
+                        <label for="hero_title">Titre principal</label>
+                        <input type="text" id="hero_title" name="hero_title" class="admin-form-control"
+                               value="Comité National Consultatif de Déontologie des Psychologues"
+                               placeholder="Titre affiché dans la bannière">
+                        <p class="form-hint">Le titre principal affiché en haut de la page d'accueil.</p>
+                    </div>
+                    <div class="admin-form-group">
+                        <label for="hero_subtitle">Sous-titre</label>
+                        <textarea id="hero_subtitle" name="hero_subtitle" class="admin-form-control" rows="3"
+                                  placeholder="Texte d'introduction sous le titre">Instance indépendante chargée de veiller au respect du Code de déontologie des psychologues en France. Le CNCDP émet des avis consultatifs, promeut la réflexion éthique et accompagne les professionnels dans leur pratique.</textarea>
+                        <p class="form-hint">Le texte d'introduction qui apparaît sous le titre principal.</p>
+                    </div>
+                    <div class="admin-form-group">
+                        <label for="hero_button_text">Texte du bouton</label>
+                        <input type="text" id="hero_button_text" name="hero_button_text" class="admin-form-control"
+                               value="Accéder au Code de déontologie 2021"
+                               placeholder="Texte du bouton d'action">
+                    </div>
+                    <div class="admin-form-group admin-mb-0">
+                        <label for="hero_button_link">Lien du bouton</label>
+                        <input type="text" id="hero_button_link" name="hero_button_link" class="admin-form-control"
+                               value="#" placeholder="URL vers laquelle le bouton redirige">
+                    </div>
+                </div>
+            </div>
+
+            {# Section Présentation #}
+            <div class="admin-card admin-mb-4">
+                <div class="admin-card-header">
+                    <h2><i class="fa-solid fa-align-left" aria-hidden="true"></i> Section Présentation</h2>
+                </div>
+                <div class="admin-card-body">
+                    <div class="admin-form-group">
+                        <label for="presentation_title">Titre de la section</label>
+                        <input type="text" id="presentation_title" name="presentation_title" class="admin-form-control"
+                               value="Notre mission" placeholder="Ex : Notre mission">
+                    </div>
+                    <div class="admin-form-group">
+                        <label for="presentation_text">Texte de présentation</label>
+                        <textarea id="presentation_text" name="presentation_text" class="admin-form-control" rows="6"
+                                  placeholder="Décrivez la mission du CNCDP">Le CNCDP est une instance consultative indépendante créée par les organisations professionnelles de psychologues. Sa mission principale est de veiller au respect du Code de déontologie des psychologues, de promouvoir une culture de l'éthique au sein de la profession et d'accompagner les psychologues comme les usagers dans l'appropriation des règles déontologiques.</textarea>
+                    </div>
+                </div>
+            </div>
+
+            {# Section Accès rapides #}
+            <div class="admin-card admin-mb-4">
+                <div class="admin-card-header">
+                    <h2><i class="fa-solid fa-bolt" aria-hidden="true"></i> Section Accès rapides</h2>
+                </div>
+                <div class="admin-card-body">
+                    <p>Les 3 cartes d'accès rapide affichées dans la section orange. Chaque carte contient un titre, une description et un lien.</p>
+
+                    <div class="admin-form-group">
+                        <label for="card1_title">Carte 1 — Titre</label>
+                        <input type="text" id="card1_title" name="card1_title" class="admin-form-control"
+                               value="Demande d'avis consultatif">
+                    </div>
+                    <div class="admin-form-group">
+                        <label for="card1_text">Carte 1 — Description</label>
+                        <textarea id="card1_text" name="card1_text" class="admin-form-control" rows="3">Vous êtes psychologue, usager ou organisation et vous souhaitez saisir le CNCDP pour obtenir un avis sur une question déontologique.</textarea>
+                    </div>
+                    <div class="admin-form-group">
+                        <label for="card1_link">Carte 1 — Lien</label>
+                        <input type="text" id="card1_link" name="card1_link" class="admin-form-control" value="#" placeholder="URL du lien">
+                    </div>
+                </div>
+            </div>
+
+            {# Boutons d'action #}
+            <div class="admin-d-flex admin-flex-wrap admin-justify-between">
+                <a href="{{ path('app_home') }}" target="_blank" rel="noopener" class="btn-admin btn-admin-outline">
+                    <i class="fa-solid fa-eye" aria-hidden="true"></i> Prévisualiser le site
+                </a>
+                <button type="submit" class="btn-admin btn-admin-primary">
+                    <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Enregistrer les modifications
+                </button>
+            </div>
+        </form>
+    </div>
+{% endblock %}

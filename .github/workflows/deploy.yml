@@ -1,0 +1,62 @@
+name: Deploy to Infomaniak
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Install SSH key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          known_hosts: unnecessary
+          if_key_exists: replace
+      
+      - name: Add known hosts
+        run: ssh-keyscan -p 22 ${{ secrets.FTP_SERVER }} >> ~/.ssh/known_hosts
+      
+      - name: Deploy via rsync
+        run: |
+          rsync -avz --delete \
+            --exclude '.git*' \
+            --exclude '.github/' \
+            --exclude 'var/' \
+            --exclude '.env.local' \
+            --exclude '.env.prod' \
+            --exclude '.env.dev' \
+            --exclude '.env.test' \
+            --exclude 'public/uploads/' \
+            --exclude 'vendor/' \
+            --exclude '*.md' \
+            --exclude 'Docs_technique/' \
+            --exclude 'tests/' \
+            --exclude 'phpunit.dist.xml' \
+            --exclude 'compose.yaml' \
+            --exclude 'compose.override.yaml' \
+            --exclude 'importmap.php' \
+            ./ ${{ secrets.FTP_USERNAME }}@${{ secrets.FTP_SERVER }}:~/sites/gperontest.online/
+      
+      - name: Install dependencies on server
+        run: |
+          ssh ${{ secrets.FTP_USERNAME }}@${{ secrets.FTP_SERVER }} << 'EOF'
+            cd ~/sites/gperontest.online/
+            # Créer .env.local seulement s'il n'existe pas (protège DATABASE_URL)
+            if [ ! -f .env.local ]; then
+              echo "APP_ENV=prod" > .env.local
+              echo "APP_SECRET=$(openssl rand -hex 16)" >> .env.local
+              echo "⚠️ .env.local créé - Ajouter DATABASE_URL manuellement"
+            fi
+            export APP_ENV=prod
+            /usr/bin/php8.3 composer install --no-dev --optimize-autoloader --no-interaction 2>/dev/null || \
+            /usr/bin/php8.2 composer install --no-dev --optimize-autoloader --no-interaction 2>/dev/null || \
+            composer install --no-dev --optimize-autoloader --no-interaction
+            php bin/console asset-map:compile
+            php bin/console cache:clear
+          EOF

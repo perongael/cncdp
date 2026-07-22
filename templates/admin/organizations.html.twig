@@ -1,0 +1,86 @@
+{% extends 'admin/base_admin.html.twig' %}
+
+{% block title %}Gérer les organisations — Administration CNCDP{% endblock %}
+
+{% block admin_body %}
+    <div class="admin-page-header">
+        <p class="breadcrumb">
+            <a href="{{ path('admin_dashboard') }}">Administration</a> &rsaquo; Organisations
+        </p>
+        <h1>Organisations adhérentes</h1>
+    </div>
+
+    <div class="admin-content">
+        <div class="admin-card admin-mb-4">
+            <div class="admin-card-header">
+                <h2><i class="fa-solid fa-building" aria-hidden="true"></i> Liste des organisations</h2>
+                <button class="btn-admin btn-admin-primary btn-admin-sm">
+                    <i class="fa-solid fa-plus" aria-hidden="true"></i> Ajouter
+                </button>
+            </div>
+            <div class="admin-card-body" style="overflow-x:auto;">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Logo</th>
+                            <th>Sigle</th>
+                            <th>Nom complet</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span style="display:inline-block;width:3rem;height:2rem;background:#e9ecef;border-radius:0.25rem;text-align:center;line-height:2rem;font-size:0.75rem;font-weight:700;color:#adb5bd;">FFPP</span></td>
+                            <td><strong>FFPP</strong></td>
+                            <td>Fédération Française des Psychologues et de Psychologie</td>
+                            <td><span class="admin-badge admin-badge-success">Actif</span></td>
+                            <td>
+                                <div class="admin-d-flex">
+                                    <button class="btn-admin btn-admin-outline btn-admin-sm">
+                                        <i class="fa-solid fa-pen" aria-hidden="true"></i>
+                                    </button>
+                                    <button class="btn-admin btn-admin-danger btn-admin-sm">
+                                        <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><span style="display:inline-block;width:3rem;height:2rem;background:#e9ecef;border-radius:0.25rem;text-align:center;line-height:2rem;font-size:0.75rem;font-weight:700;color:#adb5bd;">SNP</span></td>
+                            <td><strong>SNP</strong></td>
+                            <td>Syndicat National des Psychologues</td>
+                            <td><span class="admin-badge admin-badge-success">Actif</span></td>
+                            <td>
+                                <div class="admin-d-flex">
+                                    <button class="btn-admin btn-admin-outline btn-admin-sm">
+                                        <i class="fa-solid fa-pen" aria-hidden="true"></i>
+                                    </button>
+                                    <button class="btn-admin btn-admin-danger btn-admin-sm">
+                                        <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><span style="display:inline-block;width:3rem;height:2rem;background:#e9ecef;border-radius:0.25rem;text-align:center;line-height:2rem;font-size:0.75rem;font-weight:700;color:#adb5bd;">UNCP</span></td>
+                            <td><strong>UNCP</strong></td>
+                            <td>Union Nationale des Cliniciens Psychologues</td>
+                            <td><span class="admin-badge admin-badge-success">Actif</span></td>
+                            <td>
+                                <div class="admin-d-flex">
+                                    <button class="btn-admin btn-admin-outline btn-admin-sm">
+                                        <i class="fa-solid fa-pen" aria-hidden="true"></i>
+                                    </button>
+                                    <button class="btn-admin btn-admin-danger btn-admin-sm">
+                                        <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}
