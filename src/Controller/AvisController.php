@@ -35,6 +35,8 @@ class AvisController extends AbstractController
 
         // Récupération des IDs de critères sélectionnés (format: criteres[]=1&criteres[]=2)
         $critereIds = $request->query->all('criteres');
+        // Filtrer les valeurs vides (ex: quand on remet "Tous" dans un select)
+        $critereIds = is_array($critereIds) ? array_filter($critereIds, fn($v) => $v !== '' && $v !== null) : [];
         if (!empty($critereIds)) {
             $filters['criteres'] = $critereIds;
         }
