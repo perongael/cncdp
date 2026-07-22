@@ -42,21 +42,6 @@
                 <div class="avis-contenu" style="line-height:1.8;color:#212529;font-size:1.05rem;">
                     {{ avis.contenu|raw }}
                 </div>
-
-                {% if avis.pdfFilename %}
-                <div style="margin-top:2rem;padding:1.5rem;background:#f8f9fa;border-radius:12px;display:flex;align-items:center;flex-wrap:wrap;gap:1rem;">
-                    <div style="background:#9d38da;width:48px;height:48px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                        <i class="fa-solid fa-file-pdf" aria-hidden="true" style="color:#fff;font-size:1.25rem;"></i>
-                    </div>
-                    <div style="flex:1;">
-                        <strong style="color:#2d2540;">Télécharger l'avis complet</strong>
-                        <p style="color:#6c757d;margin:0;font-size:0.9rem;">Document PDF — {{ avis.numero }}</p>
-                    </div>
-                    <a href="{{ path('app_avis_pdf', {slug: avis.slug}) }}" class="btn" style="background:#de6d11;color:#fff;border-radius:8px;font-weight:600;white-space:nowrap;" target="_blank" rel="noopener">
-                        <i class="fa-solid fa-download" aria-hidden="true"></i> Télécharger le PDF
-                    </a>
-                </div>
-                {% endif %}
             </div>
 
             {# Colonne latérale (métadonnées) #}
@@ -76,6 +61,12 @@
                         <dt style="font-size:0.8rem;color:#6c757d;text-transform:uppercase;letter-spacing:0.05em;">Année</dt>
                         <dd style="margin-bottom:0.75rem;">{{ avis.annee }}</dd>
                     </dl>
+
+                    {% if avis.pdfFilename %}
+                    <a href="{{ path('app_avis_pdf', {slug: avis.slug}) }}" class="btn" style="background:#de6d11;color:#fff;border-radius:8px;font-weight:600;width:100%;margin-top:1rem;display:flex;align-items:center;justify-content:center;gap:0.5rem;" target="_blank" rel="noopener">
+                        <i class="fa-solid fa-file-pdf" aria-hidden="true"></i> Télécharger le PDF
+                    </a>
+                    {% endif %}
                 </div>
 
                 {# Critères #}
