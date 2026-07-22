@@ -40,7 +40,6 @@ jobs:
             --exclude 'phpunit.dist.xml' \
             --exclude 'compose.yaml' \
             --exclude 'compose.override.yaml' \
-            --exclude 'importmap.php' \
             ./ ${{ secrets.FTP_USERNAME }}@${{ secrets.FTP_SERVER }}:~/sites/gperontest.online/
       
       - name: Install dependencies on server
@@ -57,6 +56,8 @@ jobs:
             /usr/bin/php8.3 composer install --no-dev --optimize-autoloader --no-interaction 2>/dev/null || \
             /usr/bin/php8.2 composer install --no-dev --optimize-autoloader --no-interaction 2>/dev/null || \
             composer install --no-dev --optimize-autoloader --no-interaction
+            php bin/console importmap:install
             php bin/console asset-map:compile
+            php bin/console cache:clear
             php bin/console cache:clear
           EOF
