@@ -151,16 +151,17 @@ class GenerateAvisCommand extends Command
         $avisRepo = $this->em->getRepository(Avis::class);
         $force = $input->getOption('force');
         if ($avisRepo->count([]) > 0) {
-            if (!$force && !$io->confirm('Des avis existent déjà. Voulez-vous les supprimer et régénérer ?', false)) {
-                $io->warning('Génération annulée.');
+            if ($force) {
+                // Supprimer tous les avis existants
+                foreach ($avisRepo->findAll() as $avis) {
+                    $this->em->remove($avis);
+                }
+                $this->em->flush();
+                $io->info('Avis existants supprimés.');
+            } else {
+                $io->warning('Des avis existent déjà. Utilisez --force pour régénérer.');
                 return Command::SUCCESS;
             }
-            // Supprimer tous les avis existants
-            foreach ($avisRepo->findAll() as $avis) {
-                $this->em->remove($avis);
-            }
-            $this->em->flush();
-            $io->info('Avis existants supprimés.');
         }
 
         // Récupérer les valeurs de critères par slug

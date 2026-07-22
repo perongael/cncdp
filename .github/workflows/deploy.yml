@@ -61,5 +61,6 @@ jobs:
             php bin/console cache:clear
             php bin/console cache:clear
             php bin/console doctrine:migrations:migrate --no-interaction
-            php bin/console app:generate-avis --force --no-interaction 2>/dev/null || true
+            # Génère les données de démo uniquement si aucune ne existe
+            php bin/console app:generate-avis --no-interaction 2>/dev/null || true
           EOF
