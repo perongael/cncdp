@@ -308,39 +308,56 @@ document.addEventListener("DOMContentLoaded", function() {
                 var sector = editorInstance.StyleManager.getSector("Général");
                 if (!sector) return;
                 
-                // Recalculer le background-image avec les couleurs actuelles des variables
-                // Cela garantit que changer --grad-start/--grad-end met à jour le dégradé visible
-                if (bg && bg.indexOf("var(--grad-start") !== -1) {
-                    var newBg = bg.replace(/var\(--grad-start[^)]*\)/g, gs).replace(/var\(--grad-end[^)]*\)/g, ge);
-                    if (newBg !== bg) {
-                        comp.addStyle({ "background-image": newBg }, { silent: true });
-                        bg = newBg;
+                // Si le composant a --grad-start/--grad-end ET un dégradé sans var(), 
+                // forcer la mise à jour du background-image avec les nouvelles couleurs
+                if (bg && bg !== "none" && bg.indexOf("linear-gradient") !== -1) {
+                    // Extraire les couleurs du dégradé actuel
+                    var colorMatch = bg.match(/#[0-9a-fA-F]{3,6}|rgb\([^)]+\)/g) || [];
+                    var currentStart = colorMatch[0] || "";
+                    var currentEnd = colorMatch[colorMatch.length >= 2 ? colorMatch.length - 1 : 0] || "";
+                    
+                    // Si le dégradé utilise var(), recalculer avec les couleurs actuelles
+                    if (bg.indexOf("var(") !== -1) {
+                        var newBg = bg.replace(/var\(--grad-start[^)]*\)/g, gs).replace(/var\(--grad-end[^)]*\)/g, ge);
+                        if (newBg !== bg) {
+                            comp.addStyle({ "background-image": newBg }, { silent: true });
+                            bg = newBg;
+                        }
+                    }
+                    // Si le dégradé a des couleurs en dur mais --grad-start/--grad-end ont changé,
+                    // remplacer les couleurs dans le dégradé
+                    else if (gs !== currentStart || ge !== currentEnd) {
+                        // Pour les dégradés 2 couleurs simples (diagonal/horizontal/vertical)
+                        if (colorMatch.length === 2 && bg.indexOf("#2d2540") === -1 && bg.indexOf("#fd82bb") === -1 && bg.indexOf("#de6d11") === -1) {
+                            var fixed = bg.replace(currentStart, gs).replace(currentEnd, ge);
+                            if (fixed !== bg) {
+                                comp.addStyle({ "background-image": fixed }, { silent: true });
+                                bg = fixed;
+                            }
+                        }
                     }
                 }
                 
                 // Mettre à jour le select Style de fond
                 var bgProp = sector.getProperty("bg-image");
-                if (!bgProp) return;
-                if (!bg || bg === "none") return;
+                if (bgProp && bg && bg !== "none") {
+                    var norm = bg.replace(/\s+/g, '');
+                    var val = bg;
+                    if (norm.indexOf("radial-gradient") !== -1) { /* garder */ }
+                    else if (norm.indexOf("linear-gradient(135deg,#2d2540") !== -1 || norm.indexOf("linear-gradient(135deg,rgb(45") !== -1) { val = "linear-gradient(135deg, #2d2540 0%, #9d38da 50%, #9335e4 100%)"; }
+                    else if (norm.indexOf("linear-gradient(135deg,#fd82bb") !== -1 || norm.indexOf("linear-gradient(135deg,rgb(253") !== -1) { val = "linear-gradient(135deg, #fd82bb, #e05590)"; }
+                    else if (norm.indexOf("linear-gradient(135deg,#de6d11") !== -1 || norm.indexOf("linear-gradient(135deg,rgb(222") !== -1) { val = "linear-gradient(135deg, #de6d11, #fcbc63)"; }
+                    else if (norm.indexOf("linear-gradient(135deg") !== -1) { val = "linear-gradient(135deg, var(--grad-start, #9d38da), var(--grad-end, #9335e4))"; }
+                    else if (norm.indexOf("linear-gradient(toright") !== -1) { val = "linear-gradient(to right, var(--grad-start, #9d38da), var(--grad-end, #9335e4))"; }
+                    else if (norm.indexOf("linear-gradient(tobottom") !== -1) { val = "linear-gradient(to bottom, var(--grad-start, #9d38da), var(--grad-end, #9335e4))"; }
+                    try { bgProp.setValue(val, { silent: true, fromTarget: true }); } catch(e) {}
+                }
                 
-                // Détecter le type de dégradé et mettre à jour le select
-                var norm = bg.replace(/\s+/g, '');
-                var val = bg; // garde la valeur réelle par défaut
-                if (norm.indexOf("radial-gradient") !== -1) { /* garder */ }
-                else if (norm.indexOf("linear-gradient(135deg,#2d2540") !== -1 || norm.indexOf("linear-gradient(135deg,rgb(45") !== -1) { val = "linear-gradient(135deg, #2d2540 0%, #9d38da 50%, #9335e4 100%)"; }
-                else if (norm.indexOf("linear-gradient(135deg,#fd82bb") !== -1 || norm.indexOf("linear-gradient(135deg,rgb(253") !== -1) { val = "linear-gradient(135deg, #fd82bb, #e05590)"; }
-                else if (norm.indexOf("linear-gradient(135deg,#de6d11") !== -1 || norm.indexOf("linear-gradient(135deg,rgb(222") !== -1) { val = "linear-gradient(135deg, #de6d11, #fcbc63)"; }
-                else if (norm.indexOf("linear-gradient(135deg") !== -1 && (norm.indexOf("var(") !== -1 || norm.indexOf(gs.replace('#','')) !== -1)) { val = "linear-gradient(135deg, var(--grad-start, #9d38da), var(--grad-end, #9335e4))"; }
-                else if (norm.indexOf("linear-gradient(toright") !== -1) { val = "linear-gradient(to right, var(--grad-start, #9d38da), var(--grad-end, #9335e4))"; }
-                else if (norm.indexOf("linear-gradient(tobottom") !== -1) { val = "linear-gradient(to bottom, var(--grad-start, #9d38da), var(--grad-end, #9335e4))"; }
-                
-                try { bgProp.setValue(val, { silent: true, fromTarget: true }); } catch(e) {}
-                
-                // Mettre à jour les couleurs début/fin si le dégradé utilise des couleurs en dur
+                // Mettre à jour les champs de couleur début/fin
                 var gsProp = sector.getProperty("grad-start-prop");
                 var geProp = sector.getProperty("grad-end-prop");
-                if (gsProp && gs) try { gsProp.setValue(gs, { silent: true, fromTarget: true }); } catch(e) {}
-                if (geProp && ge) try { geProp.setValue(ge, { silent: true, fromTarget: true }); } catch(e) {}
+                if (gsProp) try { gsProp.setValue(gs, { silent: true, fromTarget: true }); } catch(e) {}
+                if (geProp) try { geProp.setValue(ge, { silent: true, fromTarget: true }); } catch(e) {}
             }
 
             var statusComp = document.getElementById("statusbar-component"), statusSaved = document.getElementById("statusbar-saved");
