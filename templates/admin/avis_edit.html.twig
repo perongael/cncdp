@@ -7,9 +7,18 @@
         <p class="breadcrumb">
             <a href="{{ path('admin_dashboard') }}">Administration</a> &rsaquo;
             <a href="{{ path('admin_avis_list') }}">Avis</a> &rsaquo;
-            {{ is_new ? 'Nouvel avis' : avis.titre }}
+            {{ is_new ? 'Nouvel avis' : 'Modifier : ' ~ avis.titre }}
         </p>
-        <h1>{{ is_new ? 'Créer un nouvel avis' : 'Modifier : ' ~ avis.titre }}</h1>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+            <h1>{{ is_new ? 'Créer un nouvel avis' : avis.titre }}</h1>
+            <div style="display:flex;gap:0.5rem;">
+                <button type="submit" form="avis-form" class="btn-admin btn-admin-primary">
+                    <i class="fa-solid fa-check" aria-hidden="true"></i>
+                    {{ is_new ? 'Créer' : 'Enregistrer' }}
+                </button>
+                <a href="{{ path('admin_avis_list') }}" class="btn-admin btn-admin-outline">Annuler</a>
+            </div>
+        </div>
     </div>
 
     <div class="admin-content">
@@ -21,121 +30,120 @@
         {% endfor %}
 
         <form method="post" enctype="multipart/form-data" id="avis-form">
-            <div class="admin-grid" style="grid-template-columns: 2fr 1fr;">
-                {# Colonne principale #}
+            <div class="admin-grid" style="grid-template-columns: 1fr 340px; gap: 1.5rem; align-items: start;">
+                {# ===== COLONNE PRINCIPALE ===== #}
                 <div>
-                    <div class="admin-card admin-mb-3">
+                    {# Identité de l'avis #}
+                    <div class="admin-card" style="margin-bottom: 1.5rem;">
                         <div class="admin-card-header">
-                            <h2><i class="fa-solid fa-file-lines" aria-hidden="true"></i> Contenu de l'avis</h2>
+                            <h2><i class="fa-solid fa-file-lines" aria-hidden="true" style="color:#9d38da;"></i> Identité de l'avis</h2>
+                        </div>
+                        <div class="admin-card-body">
+                            <div class="admin-grid" style="grid-template-columns: 140px 1fr; gap: 1rem;">
+                                <div class="admin-form-group">
+                                    <label for="numero">Numéro <span style="color:#9d38da;">*</span></label>
+                                    <input type="text" id="numero" name="numero" class="admin-form-control" value="{{ avis.numero }}" placeholder="2024-01" required maxlength="50">
+                                </div>
+                                <div class="admin-form-group">
+                                    <label for="titre">Titre <span style="color:#9d38da;">*</span></label>
+                                    <input type="text" id="titre" name="titre" class="admin-form-control" value="{{ avis.titre }}" placeholder="Titre complet de l'avis" required maxlength="255">
+                                </div>
+                            </div>
+                            <div class="admin-grid" style="grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                <div class="admin-form-group">
+                                    <label for="date_avis">Date <span style="color:#9d38da;">*</span></label>
+                                    <input type="date" id="date_avis" name="date_avis" class="admin-form-control" value="{{ avis.dateAvis ? avis.dateAvis|date('Y-m-d') : '' }}" required>
+                                </div>
+                                <div class="admin-form-group">
+                                    <label for="slug">Slug URL</label>
+                                    <input type="text" id="slug" name="slug" class="admin-form-control" value="{{ avis.slug }}" placeholder="slug-de-l-avis" pattern="^[a-z0-9]+(?:-[a-z0-9]+)*$" maxlength="255">
+                                    <p class="form-hint" style="margin-top:0.25rem;">Laissez vide pour génération automatique.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {# Contenu #}
+                    <div class="admin-card" style="margin-bottom: 1.5rem;">
+                        <div class="admin-card-header">
+                            <h2><i class="fa-solid fa-pen-to-square" aria-hidden="true" style="color:#9d38da;"></i> Contenu</h2>
                         </div>
                         <div class="admin-card-body">
                             <div class="admin-form-group">
-                                <label for="numero">Numéro <span style="color:var(--orange-vif);">*</span></label>
-                                <input type="text" id="numero" name="numero" class="admin-input" value="{{ avis.numero }}" placeholder="Ex: 2024-01" required maxlength="50">
-                                <small class="admin-text-muted">Numéro officiel de l'avis (unique).</small>
-                            </div>
-
-                            <div class="admin-form-group">
-                                <label for="titre">Titre <span style="color:var(--orange-vif);">*</span></label>
-                                <input type="text" id="titre" name="titre" class="admin-input" value="{{ avis.titre }}" placeholder="Titre complet de l'avis" required maxlength="255">
-                            </div>
-
-                            <div class="admin-form-group">
-                                <label for="slug">Slug URL</label>
-                                <input type="text" id="slug" name="slug" class="admin-input" value="{{ avis.slug }}" placeholder="slug-de-l-avis" pattern="^[a-z0-9]+(?:-[a-z0-9]+)*$" maxlength="255">
-                                <small class="admin-text-muted">Laissez vide pour génération automatique depuis le titre.</small>
-                            </div>
-
-                            <div class="admin-form-group">
-                                <label for="date_avis">Date de l'avis <span style="color:var(--orange-vif);">*</span></label>
-                                <input type="date" id="date_avis" name="date_avis" class="admin-input" value="{{ avis.dateAvis ? avis.dateAvis|date('Y-m-d') : '' }}" required>
-                            </div>
-
-                            <div class="admin-form-group">
                                 <label for="resume">Résumé</label>
-                                <textarea id="resume" name="resume" class="admin-input admin-textarea" rows="4" placeholder="Résumé court affiché sur la carte dans la liste publique...">{{ avis.resume }}</textarea>
+                                <textarea id="resume" name="resume" class="admin-form-control" rows="4" placeholder="Résumé affiché dans la liste publique…">{{ avis.resume }}</textarea>
+                                <p class="form-hint" style="margin-top:0.25rem;">Texte court (2-3 phrases). Affiché sur la page de consultation.</p>
                             </div>
-
-                            <div class="admin-form-group">
-                                <label for="contenu">Contenu complet (HTML)</label>
-                                <textarea id="contenu" name="contenu" class="admin-input admin-textarea" rows="12" placeholder="<p>Contenu détaillé de l'avis...</p>">{{ avis.contenu }}</textarea>
-                                <small class="admin-text-muted">Vous pouvez utiliser des balises HTML simples (&lt;p&gt;, &lt;strong&gt;, &lt;ul&gt;, etc.).</small>
+                            <div class="admin-form-group" style="margin-bottom:0;">
+                                <label for="contenu">Contenu complet</label>
+                                <textarea id="contenu" name="contenu" class="admin-form-control" rows="14" placeholder="Contenu détaillé de l'avis…">{{ avis.contenu }}</textarea>
+                                <p class="form-hint" style="margin-top:0.25rem;">HTML autorisé : &lt;p&gt;, &lt;strong&gt;, &lt;em&gt;, &lt;ul&gt;, &lt;ol&gt;, &lt;blockquote&gt;, &lt;h2&gt;-&lt;h4&gt;.</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {# Colonne latérale #}
+                {# ===== COLONNE LATÉRALE ===== #}
                 <div>
-                    {# Statut & Publication #}
-                    <div class="admin-card admin-mb-3">
+                    {# Publication #}
+                    <div class="admin-card" style="margin-bottom: 1.5rem;">
                         <div class="admin-card-header">
-                            <h2><i class="fa-solid fa-gear" aria-hidden="true"></i> Publication</h2>
+                            <h2><i class="fa-solid fa-eye" aria-hidden="true" style="color:#9d38da;"></i> Publication</h2>
                         </div>
                         <div class="admin-card-body">
-                            <div class="admin-form-group">
+                            <div class="admin-form-group" style="margin-bottom:0;">
                                 <label for="status">Statut</label>
-                                <select id="status" name="status" class="admin-input">
-                                    <option value="draft" {{ avis.status == 'draft' ? 'selected' : '' }}>Brouillon</option>
-                                    <option value="published" {{ avis.status == 'published' ? 'selected' : '' }}>Publié</option>
+                                <select id="status" name="status" class="admin-form-control">
+                                    <option value="draft" {{ avis.status == 'draft' ? 'selected' : '' }}>🟡 Brouillon</option>
+                                    <option value="published" {{ avis.status == 'published' ? 'selected' : '' }}>🟢 Publié</option>
                                 </select>
                             </div>
                         </div>
                     </div>
 
                     {# PDF #}
-                    <div class="admin-card admin-mb-3">
+                    <div class="admin-card" style="margin-bottom: 1.5rem;">
                         <div class="admin-card-header">
-                            <h2><i class="fa-solid fa-file-pdf" aria-hidden="true"></i> Document PDF</h2>
+                            <h2><i class="fa-solid fa-file-pdf" aria-hidden="true" style="color:#9d38da;"></i> Document PDF</h2>
                         </div>
                         <div class="admin-card-body">
                             {% if avis.pdfFilename %}
-                                <div class="admin-mb-2">
-                                    <span class="admin-badge admin-badge-success">
-                                        <i class="fa-solid fa-file-pdf" aria-hidden="true"></i>
-                                        {{ avis.pdfFilename }}
-                                    </span>
-                                    <button type="submit" form="delete-pdf-form" class="btn-admin btn-admin-danger btn-admin-sm" style="margin-left:0.5rem;" title="Supprimer le PDF">
+                                <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem;padding:0.5rem 0.75rem;background:#f4f0fa;border-radius:6px;">
+                                    <i class="fa-solid fa-file-pdf" aria-hidden="true" style="color:#9d38da;"></i>
+                                    <span style="font-size:0.85rem;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ avis.pdfFilename }}</span>
+                                    <button type="submit" form="delete-pdf-form" class="btn-admin btn-admin-danger btn-admin-sm" title="Supprimer le PDF" style="flex-shrink:0;">
                                         <i class="fa-solid fa-trash" aria-hidden="true"></i>
                                     </button>
                                 </div>
-                            {% else %}
-                                <p class="admin-text-muted admin-mb-2">Aucun PDF associé.</p>
                             {% endif %}
-
-                            <div class="admin-form-group">
-                                <label for="pdf_file">
-                                    {% if avis.pdfFilename %}
-                                        Remplacer le PDF
-                                    {% else %}
-                                        Importer un PDF
-                                    {% endif %}
-                                </label>
-                                <input type="file" id="pdf_file" name="pdf_file" class="admin-input" accept="application/pdf">
-                                <small class="admin-text-muted">Format accepté : PDF uniquement.</small>
+                            <div class="admin-form-group" style="margin-bottom:0;">
+                                <label for="pdf_file">{% if avis.pdfFilename %}Remplacer le fichier{% else %}Importer un PDF{% endif %}</label>
+                                <input type="file" id="pdf_file" name="pdf_file" class="admin-form-control" accept="application/pdf" style="padding:0.5rem;">
+                                <p class="form-hint" style="margin-top:0.25rem;">PDF uniquement.</p>
                             </div>
                         </div>
                     </div>
 
-                    {# Critères / Tags #}
-                    <div class="admin-card admin-mb-3">
+                    {# Critères #}
+                    <div class="admin-card" style="margin-bottom: 1.5rem;">
                         <div class="admin-card-header">
-                            <h2><i class="fa-solid fa-tags" aria-hidden="true"></i> Critères</h2>
+                            <h2><i class="fa-solid fa-tags" aria-hidden="true" style="color:#9d38da;"></i> Critères</h2>
                         </div>
                         <div class="admin-card-body">
                             {% if criteres_disponibles is empty %}
-                                <p class="admin-text-muted">Aucun critère défini. <a href="{{ path('admin_criteres_list') }}">Créer des critères</a>.</p>
+                                <p class="admin-text-muted" style="font-size:0.85rem;">Aucun critère défini.</p>
+                                <a href="{{ path('admin_criteres_list') }}" class="btn-admin btn-admin-outline btn-admin-sm" style="margin-top:0.5rem;">Gérer les critères</a>
                             {% else %}
-                                {% set selectedIds = avis.criteres|map(cv => cv.id)|join(',') %}
                                 {% for critere in criteres_disponibles %}
                                     {% if critere.valeursActives is not empty %}
-                                    <div class="admin-form-group">
-                                        <label style="font-weight:600;">{{ critere.nom }}</label>
-                                        <div style="display:flex;flex-wrap:wrap;gap:0.25rem;">
+                                    <div class="admin-form-group" style="{% if loop.last %}margin-bottom:0;{% endif %}">
+                                        <label>{{ critere.nom }}</label>
+                                        <div style="display:flex;flex-wrap:wrap;gap:0.35rem;">
                                             {% for valeur in critere.valeursActives %}
-                                                <label style="display:flex;align-items:center;gap:0.25rem;font-size:0.85rem;cursor:pointer;padding:0.2rem 0.5rem;border:1px solid #dee2e6;border-radius:4px;background:#f8f9fa;">
+                                                <label style="display:flex;align-items:center;gap:0.35rem;font-size:0.8rem;cursor:pointer;padding:0.35rem 0.65rem;border:1px solid #e0d8e8;border-radius:6px;background:#faf8fc;transition:all 0.15s;user-select:none;">
                                                     <input type="checkbox" name="criteres_valeurs[]" value="{{ valeur.id }}"
-                                                        {{ valeur.id in avis.criteres|map(cv => cv.id) ? 'checked' : '' }}>
+                                                        {{ valeur.id in avis.criteres|map(cv => cv.id) ? 'checked' : '' }}
+                                                        style="accent-color:#9d38da;">
                                                     {{ valeur.valeur }}
                                                 </label>
                                             {% endfor %}
@@ -143,30 +151,16 @@
                                     </div>
                                     {% endif %}
                                 {% endfor %}
+                                <a href="{{ path('admin_criteres_list') }}" style="font-size:0.75rem;color:#9d38da;text-decoration:none;display:inline-block;margin-top:0.5rem;">
+                                    <i class="fa-solid fa-gear" aria-hidden="true"></i> Gérer les critères
+                                </a>
                             {% endif %}
-                            <small class="admin-text-muted">
-                                <a href="{{ path('admin_criteres_list') }}">Gérer les critères et valeurs disponibles</a>
-                            </small>
-                        </div>
-                    </div>
-
-                    {# Actions #}
-                    <div class="admin-card">
-                        <div class="admin-card-body">
-                            <button type="submit" class="btn-admin btn-admin-primary" style="width:100%;">
-                                <i class="fa-solid fa-check" aria-hidden="true"></i>
-                                {{ is_new ? 'Créer l\'avis' : 'Enregistrer' }}
-                            </button>
-                            <a href="{{ path('admin_avis_list') }}" class="btn-admin btn-admin-outline" style="width:100%;margin-top:0.5rem;">
-                                Annuler
-                            </a>
                         </div>
                     </div>
                 </div>
             </div>
         </form>
 
-        {# Formulaire caché pour suppression du PDF #}
         {% if avis.pdfFilename %}
         <form method="post" action="{{ path('admin_avis_delete_pdf', {id: avis.id}) }}" id="delete-pdf-form" style="display:none;">
             <input type="hidden" name="_token" value="{{ csrf_token('delete_pdf_' ~ avis.id) }}">
