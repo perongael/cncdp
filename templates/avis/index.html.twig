@@ -130,7 +130,7 @@
                             </h3>
                             {% if avis.resume %}
                                 <p style="color:#6c757d;font-size:0.9rem;line-height:1.5;margin-bottom:1rem;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;">
-                                    {{ avis.resume|striptags|u.truncate(200, '...') }}
+                                    {{ avis.resume|striptags|slice(0, 200) }}{% if avis.resume|striptags|length > 200 %}...{% endif %}
                                 </p>
                             {% endif %}
                             {% if avis.criteres|length > 0 %}

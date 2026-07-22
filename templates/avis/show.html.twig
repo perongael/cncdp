@@ -2,7 +2,7 @@
 
 {% block title %}{{ avis.numero }} — {{ avis.titre }} — CNCDP{% endblock %}
 
-{% block meta_description %}{{ avis.resume|default('Avis consultatif du CNCDP : ' ~ avis.titre)|striptags|u.truncate(160, '...') }}{% endblock %}
+{% block meta_description %}{{ avis.resume|default('Avis consultatif du CNCDP : ' ~ avis.titre)|striptags|slice(0, 160) }}{% if avis.resume|default('')|striptags|length > 160 %}...{% endif %}{% endblock %}
 
 {% block body %}
 {# ===== HERO ===== #}
