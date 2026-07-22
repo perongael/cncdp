@@ -45,16 +45,16 @@ document.addEventListener("DOMContentLoaded", function() {
                             { name: "Style de fond", id: "bg-image", property: "background-image", type: "select", defaults: "none",
                                 options: [
                                     {value:"none",name:"🎨 Couleur unie"},
-                                    {value:"linear-gradient(135deg, #9d38da, #9335e4)",name:"↗ Dégradé diagonal"},
-                                    {value:"linear-gradient(to right, #9d38da, #9335e4)",name:"→ Dégradé horizontal"},
-                                    {value:"linear-gradient(to bottom, #9d38da, #9335e4)",name:"↓ Dégradé vertical"},
+                                    {value:"linear-gradient(135deg, var(--grad-start, #9d38da), var(--grad-end, #9335e4))",name:"↗ Dégradé diagonal"},
+                                    {value:"linear-gradient(to right, var(--grad-start, #9d38da), var(--grad-end, #9335e4))",name:"→ Dégradé horizontal"},
+                                    {value:"linear-gradient(to bottom, var(--grad-start, #9d38da), var(--grad-end, #9335e4))",name:"↓ Dégradé vertical"},
                                     {value:"linear-gradient(135deg, #2d2540 0%, #9d38da 50%, #9335e4 100%)",name:"🌙 Dégradé sombre"},
                                     {value:"linear-gradient(135deg, #fd82bb, #e05590)",name:"🌸 Dégradé rose"},
                                     {value:"linear-gradient(135deg, #de6d11, #fcbc63)",name:"🍊 Dégradé orange"}
                                 ]
                             },
-                            { name: "Couleur début dégradé", property: "--grad-start", type: "color", defaults: "#9d38da" },
-                            { name: "Couleur fin dégradé", property: "--grad-end", type: "color", defaults: "#9335e4" },
+                            { name: "Couleur début dégradé", id: "grad-start-prop", property: "--grad-start", type: "color", defaults: "#9d38da" },
+                            { name: "Couleur fin dégradé", id: "grad-end-prop", property: "--grad-end", type: "color", defaults: "#9335e4" },
                             { name: "Couleur du texte", property: "color", type: "color", defaults: "" }
                         ]
                     },
@@ -298,29 +298,49 @@ document.addEventListener("DOMContentLoaded", function() {
             setTimeout(function(){ editorInstance.Pages.getAll().forEach(function(p){ p.getMainComponent().find('*').forEach(function(c){ var tn=typeNames[c.get('type')]; if(tn)c.set('name',tn); }); }); }, 300);
             editorInstance.on('component:add', function(c){ var tn=typeNames[c.get('type')]; if(tn) setTimeout(function(){ c.set('name', tn); }, 50); });
 
-            // === Synchronisation Style Manager : détecte le type de fond quand un élément est sélectionné ===
+            // === Synchronisation Style Manager : détecte le type de fond ET applique les couleurs de dégradé ===
             function syncBgToStyleManager(comp) {
                 if (!comp || !comp.getStyle) return;
-                var bg = comp.getStyle()["background-image"] || "";
-                if (!bg || bg === "none") return; // ne rien changer si pas de fond
+                var styles = comp.getStyle();
+                var bg = styles["background-image"] || "";
+                var gs = styles["--grad-start"] || "#9d38da";
+                var ge = styles["--grad-end"] || "#9335e4";
                 var sector = editorInstance.StyleManager.getSector("Général");
                 if (!sector) return;
+                
+                // Recalculer le background-image avec les couleurs actuelles des variables
+                // Cela garantit que changer --grad-start/--grad-end met à jour le dégradé visible
+                if (bg && bg.indexOf("var(--grad-start") !== -1) {
+                    var newBg = bg.replace(/var\(--grad-start[^)]*\)/g, gs).replace(/var\(--grad-end[^)]*\)/g, ge);
+                    if (newBg !== bg) {
+                        comp.addStyle({ "background-image": newBg }, { silent: true });
+                        bg = newBg;
+                    }
+                }
+                
+                // Mettre à jour le select Style de fond
                 var bgProp = sector.getProperty("bg-image");
                 if (!bgProp) return;
+                if (!bg || bg === "none") return;
                 
-                // Détecte le type de dégradé et met à jour le select
-                var val = bg; // par défaut, garde la valeur réelle
-                
-                // Normaliser pour comparaison (enlever les espaces, convertir rgb→hex approx)
+                // Détecter le type de dégradé et mettre à jour le select
                 var norm = bg.replace(/\s+/g, '');
-                if (norm.indexOf("radial-gradient") !== -1) { /* garder la valeur */ }
+                var val = bg; // garde la valeur réelle par défaut
+                if (norm.indexOf("radial-gradient") !== -1) { /* garder */ }
                 else if (norm.indexOf("linear-gradient(135deg,#2d2540") !== -1 || norm.indexOf("linear-gradient(135deg,rgb(45") !== -1) { val = "linear-gradient(135deg, #2d2540 0%, #9d38da 50%, #9335e4 100%)"; }
                 else if (norm.indexOf("linear-gradient(135deg,#fd82bb") !== -1 || norm.indexOf("linear-gradient(135deg,rgb(253") !== -1) { val = "linear-gradient(135deg, #fd82bb, #e05590)"; }
                 else if (norm.indexOf("linear-gradient(135deg,#de6d11") !== -1 || norm.indexOf("linear-gradient(135deg,rgb(222") !== -1) { val = "linear-gradient(135deg, #de6d11, #fcbc63)"; }
-                // Si c'est un dégradé 135deg qui ne correspond à aucun preset, on laisse la valeur réelle
-                // Le select affichera le premier match ou restera sur la valeur brute
+                else if (norm.indexOf("linear-gradient(135deg") !== -1 && (norm.indexOf("var(") !== -1 || norm.indexOf(gs.replace('#','')) !== -1)) { val = "linear-gradient(135deg, var(--grad-start, #9d38da), var(--grad-end, #9335e4))"; }
+                else if (norm.indexOf("linear-gradient(toright") !== -1) { val = "linear-gradient(to right, var(--grad-start, #9d38da), var(--grad-end, #9335e4))"; }
+                else if (norm.indexOf("linear-gradient(tobottom") !== -1) { val = "linear-gradient(to bottom, var(--grad-start, #9d38da), var(--grad-end, #9335e4))"; }
                 
                 try { bgProp.setValue(val, { silent: true, fromTarget: true }); } catch(e) {}
+                
+                // Mettre à jour les couleurs début/fin si le dégradé utilise des couleurs en dur
+                var gsProp = sector.getProperty("grad-start-prop");
+                var geProp = sector.getProperty("grad-end-prop");
+                if (gsProp && gs) try { gsProp.setValue(gs, { silent: true, fromTarget: true }); } catch(e) {}
+                if (geProp && ge) try { geProp.setValue(ge, { silent: true, fromTarget: true }); } catch(e) {}
             }
 
             var statusComp = document.getElementById("statusbar-component"), statusSaved = document.getElementById("statusbar-saved");
