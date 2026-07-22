@@ -5,12 +5,32 @@
 ## En-tête
 
 Date : 22/07/2026
-Session : Système de gestion des avis consultatifs
-Tag : [AVIS] [FILTRES] [PDF] [CRUD] [ADMIN]
+Session : Finalisation UX avis — filtres AJAX, refonte liste, formulaire admin, corrections CSS/header
+Tag : [AVIS] [FILTRES] [UX] [FIX] [ADMIN] [CSS]
 
 ---
 
 ## Historique
+
+### Session [AVIS] [FILTRES] [UX] [FIX] [ADMIN] [CSS] — 22/07/2026
+
+**Objectif :** Finaliser l'UX du système d'avis : filtres AJAX sans rechargement, refonte de la liste et du formulaire admin, corrections CSS header/footer, documentation.
+
+**Résumé :**
+- **Filtres AJAX** : les filtres de la page `/avis` fonctionnent maintenant sans rechargement de page. La liste se met à jour dynamiquement via `fetch()` + partial Twig `_list.html.twig`. L'URL est synchronisée avec `history.replaceState()`.
+- **Logique ET/OU corrigée** : les critères sont groupés par slug dans l'URL (`criteres[thematique][]=1`). ET entre groupes différents, OU au sein d'un même groupe. Résout le bug où combiner Consentement + Psychologue ramenait trop de résultats.
+- **Refonte liste** : passage des cards à une liste sobre (fond `#fafafa`, bordures fines, résumé intégral, tags pastel violets). Hero et filtres conservés dans leur design d'origine.
+- **Refonte formulaire admin** : correction `admin-input` → `admin-form-control` (les champs prennent maintenant toute la largeur), layout repensé (grille `1fr 340px`), boutons dans le header.
+- **Correction police header** : ajout `body { font-family: var(--font-principale); }` dans `cncdp.css`. Les pages sans style GrapesJS (comme `/avis`) tombaient sur la police système Bootstrap au lieu d'Inter.
+- **Cache Infomaniak** : ajout `Cache-Control: no-cache` dans `SecurityHeadersSubscriber` pour éviter les incohérences de menu entre pages.
+- **Bouton PDF** : déplacé dans la sidebar de la fiche avis, sous le bloc Informations.
+- **Documentation** : création de `Docs_technique/15-avis.md` couvrant l'ensemble du système.
+
+**⚠️ Règles apprises :**
+- `admin-input` n'existe pas dans admin.css → utiliser `admin-form-control`
+- Les `<style>` injectés par GrapesJS dans le body affectent TOUTE la page (y compris le header)
+- Le cache nginx/Varnish d'Infomaniak peut servir des versions différentes du menu selon les pages
+- Les filtres combinés nécessitent une logique ET entre critères différents (JOIN distincts par groupe) et non un simple IN
 
 ### Session [AVIS] [FILTRES] [PDF] [CRUD] [ADMIN] — 22/07/2026
 
@@ -541,7 +561,7 @@ Raison : Le plugin Toolbox (0 avis, 2023) n'est pas fiable et fait trop de chose
 
 ## 📍 Next Step
 
-Finaliser le système Avis : tester l'import de PDF avec taguage, peupler la base avec des avis réels, et éventuellement ajouter un import batch (dossier de PDF → création automatique avec métadonnées extraites des noms de fichiers).
+Créer l'entité `Organization` avec migration Doctrine et finaliser la page admin Organisations (CRUD : ajout, modification, suppression, upload logo).
 
 ---
 
