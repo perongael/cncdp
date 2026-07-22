@@ -1,0 +1,67 @@
+{# Partial : liste des avis uniquement (pour AJAX) #}
+{% if avis_list is empty %}
+    <div style="text-align:center;padding:4rem 1rem;">
+        <i class="fa-solid fa-scale-balanced" aria-hidden="true" style="font-size:2.5rem;color:#e9ecef;display:block;margin-bottom:1rem;"></i>
+        <h3 style="color:#6c757d;font-weight:500;">Aucun avis trouvé</h3>
+        <p style="color:#adb5bd;">
+            {% if filters.q or filters.annee or filters.criteres|default([])|length > 0 %}
+                Essayez de modifier vos critères de recherche.
+            {% else %}
+                Les avis consultatifs seront publiés prochainement.
+            {% endif %}
+        </p>
+        {% if filters.q or filters.annee or filters.criteres|default([])|length > 0 %}
+            <a href="{{ path('app_avis_index') }}" class="btn btn-outline-secondary btn-sm mt-2">Réinitialiser les filtres</a>
+        {% endif %}
+    </div>
+{% else %}
+    <div data-avis-total="{{ avis_list|length }}">
+        <p style="color:#6c757d;font-size:0.85rem;margin-bottom:1.5rem;">
+            <strong>{{ avis_list|length }}</strong> avis trouvé(s)
+        </p>
+
+        <div style="background:#fff;border:1px solid #e9ecef;border-radius:10px;overflow:hidden;">
+            {% for avis in avis_list %}
+            <div style="padding:1.5rem;{% if not loop.last %}border-bottom:1px solid #f0f0f0;{% endif %}display:flex;gap:1.5rem;align-items:flex-start;transition:background 0.15s;" onmouseover="this.style.background='#fdfbff'" onmouseout="this.style.background=''">
+                {# Colonne gauche : méta #}
+                <div style="flex-shrink:0;width:100px;text-align:right;">
+                    <div style="font-size:0.75rem;color:#adb5bd;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">{{ avis.dateAvis|date('d/m/Y') }}</div>
+                    <code style="background:#f4f0fa;color:#7c3aed;font-size:0.8rem;padding:0.2rem 0.5rem;border-radius:4px;font-weight:600;">{{ avis.numero }}</code>
+                </div>
+
+                {# Colonne centrale : contenu #}
+                <div style="flex:1;min-width:0;">
+                    <h2 style="font-size:1.1rem;font-weight:600;line-height:1.4;margin:0 0 0.5rem 0;">
+                        <a href="{{ path('app_avis_show', {slug: avis.slug}) }}" style="color:#2d2540;text-decoration:none;">
+                            {{ avis.titre }}
+                        </a>
+                    </h2>
+                    {% if avis.resume %}
+                        <p style="color:#495057;font-size:0.9rem;line-height:1.65;margin-bottom:0.75rem;">
+                            {{ avis.resume }}
+                        </p>
+                    {% endif %}
+                    {% if avis.criteres|length > 0 %}
+                    <div style="display:flex;flex-wrap:wrap;gap:0.35rem;">
+                        {% for cv in avis.criteres|slice(0, 6) %}
+                            <span style="background:#f4f0fa;color:#7c3aed;font-size:0.7rem;padding:0.15rem 0.55rem;border-radius:20px;white-space:nowrap;">{{ cv.valeur }}</span>
+                        {% endfor %}
+                        {% if avis.criteres|length > 6 %}
+                            <span style="font-size:0.7rem;color:#adb5bd;">+{{ avis.criteres|length - 6 }}</span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                {# Colonne droite : action #}
+                <div style="flex-shrink:0;display:flex;align-items:center;">
+                    <a href="{{ path('app_avis_show', {slug: avis.slug}) }}" style="display:inline-flex;align-items:center;gap:0.35rem;color:#9d38da;text-decoration:none;font-size:0.85rem;font-weight:500;white-space:nowrap;padding:0.4rem 0.75rem;border:1px solid #e8dff5;border-radius:6px;transition:all 0.15s;" onmouseover="this.style.background='#9d38da';this.style.color='#fff';this.style.borderColor='#9d38da'" onmouseout="this.style.background='';this.style.color='#9d38da';this.style.borderColor='#e8dff5'">
+                        Lire
+                        <i class="fa-solid fa-arrow-right" aria-hidden="true" style="font-size:0.7rem;"></i>
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endif %}

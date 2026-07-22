@@ -48,12 +48,19 @@ class AvisController extends AbstractController
         // Avis filtrés
         $avisList = $avisRepository->findByFilters($filters);
 
-        return $this->render('avis/index.html.twig', [
+        $templateData = [
             'avis_list' => $avisList,
             'criteres' => $criteresActifs,
             'annees' => $annees,
             'filters' => $filters,
-        ]);
+        ];
+
+        // Requête AJAX : retourner uniquement la liste
+        if ($request->query->get('_partial') || $request->headers->get('X-Requested-With') === 'XMLHttpRequest') {
+            return $this->render('avis/_list.html.twig', $templateData);
+        }
+
+        return $this->render('avis/index.html.twig', $templateData);
     }
 
     /**
