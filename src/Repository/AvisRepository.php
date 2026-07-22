@@ -60,11 +60,19 @@ class AvisRepository extends ServiceEntityRepository
                ->setParameter('annee', (int) $filters['annee']);
         }
 
-        // Filtre par valeurs de critères (ManyToMany)
+        // Filtre par valeurs de critères groupés (ET entre groupes, OU dans un même groupe)
+        // Format: ['thematique' => [1,2], 'type-demandeur' => [3]]
         if (!empty($filters['criteres']) && is_array($filters['criteres'])) {
-            $qb->join('a.criteres', 'cv')
-               ->andWhere('cv.id IN (:critereIds)')
-               ->setParameter('critereIds', array_map('intval', $filters['criteres']));
+            $i = 0;
+            foreach ($filters['criteres'] as $groupe => $ids) {
+                if (empty($ids)) continue;
+                $alias = 'cv' . $i;
+                $paramName = 'critereIds' . $i;
+                $qb->join('a.criteres', $alias)
+                   ->andWhere($alias . '.id IN (:' . $paramName . ')')
+                   ->setParameter($paramName, $ids);
+                $i++;
+            }
         }
 
         return $qb->orderBy('a.dateAvis', 'DESC')

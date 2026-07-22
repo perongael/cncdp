@@ -33,12 +33,21 @@ class AvisController extends AbstractController
             'annee' => $request->query->get('annee', ''),
         ];
 
-        // Récupération des IDs de critères sélectionnés (format: criteres[]=1&criteres[]=2)
-        $critereIds = $request->query->all('criteres');
-        // Filtrer les valeurs vides (ex: quand on remet "Tous" dans un select)
-        $critereIds = is_array($critereIds) ? array_filter($critereIds, fn($v) => $v !== '' && $v !== null) : [];
-        if (!empty($critereIds)) {
-            $filters['criteres'] = $critereIds;
+        // Récupération des critères groupés par slug (format: criteres[thematique][]=1&criteres[type-demandeur][]=2)
+        $criteresParGroupe = $request->query->all('criteres');
+        $criteresFiltres = [];
+        if (is_array($criteresParGroupe)) {
+            foreach ($criteresParGroupe as $groupe => $ids) {
+                if (is_array($ids)) {
+                    $idsFiltres = array_filter($ids, fn($v) => $v !== '' && $v !== null);
+                    if (!empty($idsFiltres)) {
+                        $criteresFiltres[$groupe] = array_map('intval', $idsFiltres);
+                    }
+                }
+            }
+        }
+        if (!empty($criteresFiltres)) {
+            $filters['criteres'] = $criteresFiltres;
         }
 
         // Récupération de tous les critères actifs pour l'affichage des filtres

@@ -53,10 +53,10 @@
                     {% if critere.valeursActives is not empty %}
                     <div class="col-md-4 col-lg-3 mb-2">
                         <div style="font-weight:600;font-size:0.8rem;color:#6c757d;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">{{ critere.nom }}</div>
-                            <select name="criteres[]" class="form-control form-control-sm" style="border-radius:6px;" data-filter="change">
+                            <select name="criteres[{{ critere.slug }}][]" class="form-control form-control-sm" style="border-radius:6px;" data-filter="change">
                             <option value="">Tous</option>
                             {% for valeur in critere.valeursActives %}
-                                <option value="{{ valeur.id }}" {{ valeur.id in filters.criteres|default([]) ? 'selected' : '' }}>{{ valeur.valeur }}</option>
+                                <option value="{{ valeur.id }}" {{ valeur.id in filters.criteres[critere.slug]|default([]) ? 'selected' : '' }}>{{ valeur.valeur }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -66,7 +66,7 @@
             {% endif %}
 
             {# Filtres actifs + réinitialisation #}
-            {% if filters.q or filters.annee or filters.criteres|default([])|length > 0 %}
+            {% if filters.q or filters.annee or filters.criteres|default([])|filter(v => v is not empty)|length > 0 %}
             <div class="mt-3 d-flex align-items-center flex-wrap" style="gap:0.5rem;">
                 <span style="font-size:0.85rem;color:#6c757d;">Filtres actifs :</span>
                 {% if filters.q %}
