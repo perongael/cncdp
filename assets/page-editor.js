@@ -167,7 +167,16 @@ document.addEventListener("DOMContentLoaded", function() {
         editorInstance.on("load", function() {
             // Si le projet GrapesJS est vide mais qu'il y a du contenu HTML existant, le charger
             if (editorInstance.getWrapper().components().length === 0 && htmlInput && htmlInput.value.trim()) {
-                editorInstance.setComponents(htmlInput.value.trim());
+                var raw = htmlInput.value.trim();
+                // Extraire uniquement le contenu du body (sans DOCTYPE/html/head/meta/style)
+                var bodyMatch = raw.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+                if (bodyMatch && bodyMatch[1]) {
+                    editorInstance.setComponents(bodyMatch[1].trim());
+                } else {
+                    // Fallback : si pas de balise body, enlever DOCTYPE et balises html/head
+                    var cleaned = raw.replace(/<!DOCTYPE[^>]*>/i, '').replace(/<html[^>]*>/i, '').replace(/<\/html>/i, '').replace(/<head[^>]*>[\s\S]*?<\/head>/i, '');
+                    editorInstance.setComponents(cleaned.trim());
+                }
             }
 
             var panelMap = { "tb-blocks":{panel:"views",btn:"open-blocks"}, "tb-layers":{panel:"views",btn:"open-layers"}, "tb-styles":{panel:"views",btn:"open-sm"}, "tb-traits":{panel:"views",btn:"open-tm"} };
