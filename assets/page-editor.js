@@ -41,21 +41,16 @@ document.addEventListener("DOMContentLoaded", function() {
                     {
                         name: "Général", open: true,
                         properties: [
-                            { 
-                                name: "Couleur de fond", property: "background-color", type: "color", defaults: "",
-                                // Forcer la lecture depuis le style inline ET le computed style
-                                __getValue: function(model) { return model.getStyle()["background-color"] || ""; }
-                            },
+                            { name: "Couleur de fond", property: "background-color", type: "color", defaults: "" },
                             { name: "Style de fond", id: "bg-image", property: "background-image", type: "select", defaults: "none",
                                 options: [
                                     {value:"none",name:"🎨 Couleur unie"},
-                                    {value:"__gradient_2__",name:"↗ Dégradé diagonal"},
-                                    {value:"__gradient_h__",name:"→ Dégradé horizontal"},
-                                    {value:"__gradient_v__",name:"↓ Dégradé vertical"},
-                                    {value:"__gradient_dark__",name:"🌙 Dégradé sombre"},
-                                    {value:"__gradient_pink__",name:"🌸 Dégradé rose"},
-                                    {value:"__gradient_orange__",name:"🍊 Dégradé orange"},
-                                    {value:"__gradient_custom__",name:"✨ Dégradé personnalisé"}
+                                    {value:"linear-gradient(135deg, #9d38da, #9335e4)",name:"↗ Dégradé diagonal"},
+                                    {value:"linear-gradient(to right, #9d38da, #9335e4)",name:"→ Dégradé horizontal"},
+                                    {value:"linear-gradient(to bottom, #9d38da, #9335e4)",name:"↓ Dégradé vertical"},
+                                    {value:"linear-gradient(135deg, #2d2540 0%, #9d38da 50%, #9335e4 100%)",name:"🌙 Dégradé sombre"},
+                                    {value:"linear-gradient(135deg, #fd82bb, #e05590)",name:"🌸 Dégradé rose"},
+                                    {value:"linear-gradient(135deg, #de6d11, #fcbc63)",name:"🍊 Dégradé orange"}
                                 ]
                             },
                             { name: "Couleur début dégradé", property: "--grad-start", type: "color", defaults: "#9d38da" },
@@ -192,34 +187,6 @@ document.addEventListener("DOMContentLoaded", function() {
             // Cacher la section "Classes CSS" du gestionnaire de styles (fallback JS)
             setTimeout(function(){ var el=document.querySelector(".gjs-clm-tags"); if(el) el.style.display="none"; el=document.querySelector(".gjs-clm-sels-info"); if(el) el.style.display="none"; el=document.querySelector(".gjs-clm-sels"); if(el) el.style.display="none"; }, 100);
 
-            // === Conversion des dégradés : __gradient_*__ → vraie valeur CSS ===
-            function realBgValue(sel) {
-                var gs = "#9d38da", ge = "#9335e4";
-                try { var sector = editorInstance.StyleManager.getSector("Général"); if (sector) { var gsProp = sector.getProperty("--grad-start"); if (gsProp) gs = gsProp.getValue() || gs; var geProp = sector.getProperty("--grad-end"); if (geProp) ge = geProp.getValue() || ge; } } catch(e) {}
-                var map = {
-                    "__gradient_2__": "linear-gradient(135deg, " + gs + ", " + ge + ")",
-                    "__gradient_h__": "linear-gradient(to right, " + gs + ", " + ge + ")",
-                    "__gradient_v__": "linear-gradient(to bottom, " + gs + ", " + ge + ")",
-                    "__gradient_dark__": "linear-gradient(135deg, #2d2540 0%, #9d38da 50%, #9335e4 100%)",
-                    "__gradient_pink__": "linear-gradient(135deg, #fd82bb, #e05590)",
-                    "__gradient_orange__": "linear-gradient(135deg, #de6d11, #fcbc63)"
-                };
-                return map[sel] || sel;
-            }
-            // Intercepter les changements du Style Manager pour background-image
-            editorInstance.on("style:property:update", function(prop) {
-                if (prop.get("property") === "background-image") {
-                    var val = prop.getValue();
-                    if (val && val.indexOf("__gradient_") === 0) {
-                        var real = realBgValue(val);
-                        var comp = editorInstance.getSelected();
-                        if (comp && comp.addStyle) { comp.addStyle({ "background-image": real }); }
-                        // Re-sync le sélecteur après application
-                        setTimeout(function(){ syncBgToStyleManager(comp); }, 50);
-                    }
-                }
-            });
-
             var tbUndo = document.getElementById("tb-undo"), tbRedo = document.getElementById("tb-redo");
             if (tbUndo) tbUndo.addEventListener("click", function() { editorInstance.runCommand("core:undo"); });
             if (tbRedo) tbRedo.addEventListener("click", function() { editorInstance.runCommand("core:redo"); });
@@ -325,23 +292,26 @@ document.addEventListener("DOMContentLoaded", function() {
             // === Synchronisation Style Manager : détecte le type de fond quand un élément est sélectionné ===
             function syncBgToStyleManager(comp) {
                 if (!comp || !comp.getStyle) return;
-                var bg = comp.getStyle()["background-image"] || comp.getStyle()["background"] || "";
+                var bg = comp.getStyle()["background-image"] || "";
+                if (!bg || bg === "none") return; // ne rien changer si pas de fond
                 var sector = editorInstance.StyleManager.getSector("Général");
                 if (!sector) return;
                 var bgProp = sector.getProperty("bg-image");
                 if (!bgProp) return;
-                var val = "none";
-                if (bg && bg !== "none") {
-                    if (bg.indexOf("radial-gradient") !== -1) val = "__gradient_custom__";
-                    else if (bg.indexOf("135deg") !== -1 && (bg.indexOf("2d2540") !== -1 || bg.indexOf("rgb(45") !== -1)) val = "__gradient_dark__";
-                    else if (bg.indexOf("135deg") !== -1 && (bg.indexOf("fd82bb") !== -1 || bg.indexOf("rgb(253") !== -1)) val = "__gradient_pink__";
-                    else if (bg.indexOf("135deg") !== -1 && (bg.indexOf("de6d11") !== -1 || bg.indexOf("rgb(222") !== -1)) val = "__gradient_orange__";
-                    else if (bg.indexOf("135deg") !== -1) val = "__gradient_2__";
-                    else if (bg.indexOf("to right") !== -1) val = "__gradient_h__";
-                    else if (bg.indexOf("to bottom") !== -1) val = "__gradient_v__";
-                    else if (bg.indexOf("linear-gradient") !== -1 || bg.indexOf("gradient") !== -1) val = "__gradient_custom__";
-                }
-                bgProp.setValue(val, { silent: true, fromTarget: true });
+                
+                // Détecte le type de dégradé et met à jour le select
+                var val = bg; // par défaut, garde la valeur réelle
+                
+                // Normaliser pour comparaison (enlever les espaces, convertir rgb→hex approx)
+                var norm = bg.replace(/\s+/g, '');
+                if (norm.indexOf("radial-gradient") !== -1) { /* garder la valeur */ }
+                else if (norm.indexOf("linear-gradient(135deg,#2d2540") !== -1 || norm.indexOf("linear-gradient(135deg,rgb(45") !== -1) { val = "linear-gradient(135deg, #2d2540 0%, #9d38da 50%, #9335e4 100%)"; }
+                else if (norm.indexOf("linear-gradient(135deg,#fd82bb") !== -1 || norm.indexOf("linear-gradient(135deg,rgb(253") !== -1) { val = "linear-gradient(135deg, #fd82bb, #e05590)"; }
+                else if (norm.indexOf("linear-gradient(135deg,#de6d11") !== -1 || norm.indexOf("linear-gradient(135deg,rgb(222") !== -1) { val = "linear-gradient(135deg, #de6d11, #fcbc63)"; }
+                // Si c'est un dégradé 135deg qui ne correspond à aucun preset, on laisse la valeur réelle
+                // Le select affichera le premier match ou restera sur la valeur brute
+                
+                try { bgProp.setValue(val, { silent: true, fromTarget: true }); } catch(e) {}
             }
 
             var statusComp = document.getElementById("statusbar-component"), statusSaved = document.getElementById("statusbar-saved");
