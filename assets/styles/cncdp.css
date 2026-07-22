@@ -23,6 +23,12 @@
     --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.04);
 }
 
+/* Police globale du site — force Inter sur toutes les pages, y compris celles sans style GrapesJS */
+body {
+    font-family: var(--font-principale);
+    color: var(--noir-texte);
+}
+
 /* Header & Navigation du site */
 .site-header { position: sticky; top: 0; z-index: 1000; background-color: var(--blanc); box-shadow: var(--shadow-sm); }
 .site-header > .container { max-width: 1320px; } /* Plus large que le container Bootstrap par défaut (1140px) */
