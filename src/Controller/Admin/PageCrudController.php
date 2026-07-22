@@ -168,6 +168,11 @@ class PageCrudController extends AbstractController
      */
     private function cleanHtml(string $html): string
     {
+        // Décoder les échappements Unicode JSON (\u00e9 → é)
+        $html = preg_replace_callback('/\\\\u([0-9a-fA-F]{4})/', function (array $m): string {
+            return mb_chr(hexdec($m[1]), 'UTF-8') ?? $m[0];
+        }, $html);
+
         $html = preg_replace('/<script\b[^>]*>.*?<\/script>/si', '', $html);
         $html = preg_replace('/\s+on\w+\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]+)/i', '', $html);
         $html = preg_replace('/<iframe\b[^>]*>.*?<\/iframe>/si', '', $html);
